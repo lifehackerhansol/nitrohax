@@ -18,14 +18,12 @@
 
 #include "bios_decompress_callback.h"
 
-static int getSizeBiosCallback (uint8 * source, uint16 * dest, uint32 r2)
+int getSizeBiosCallback (uint8 * source, uint16 * dest, uint32 r2)
 {
-	(void)dest;
-	(void)r2;
 	return *((int*)source);
 }
 
-static uint8 readByteBiosCallback (uint8 * source)
+uint8 readByteBiosCallback (uint8 * source)
 {
 	return *source;
 }
