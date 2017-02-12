@@ -113,9 +113,9 @@ int main(int argc, char **argv) {
 	// REG_SCFG_CLK = 0x80;
 	REG_SCFG_CLK = 0x85;
 
+	bool HealthandSafety_MSG = false;
 	bool UseNTRSplash = true;
 	bool TriggerExit = false;
-	std::string	bootstrapPath = "";
 
 	scanKeys();
 	int pressed = keysDown();
@@ -123,15 +123,21 @@ int main(int argc, char **argv) {
 	if (fatInitDefault()) {
 		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
 		
-		if(ntrforwarderini.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) { UseNTRSplash = false; }
-		if(ntrforwarderini.GetInt("NTR-FORWARDER","DISABLE_ANIMATION",0) == 0) { if( pressed & KEY_B ) {} else { BootSplashInit(UseNTRSplash); } }
-		if(ntrforwarderini.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) {
-			REG_SCFG_EXT = 0x83002000;
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","HEALTH&SAFETY_MSG",0) == 1) { HealthandSafety_MSG = true; }
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) if( pressed & KEY_A ) {} else { UseNTRSplash = false; }
+		else if( pressed & KEY_A ) { UseNTRSplash = false; }
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","DISABLE_ANIMATION",0) == 0) { if( pressed & KEY_B ) {} else { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); } }
+		if(!UseNTRSplash) {
 			REG_SCFG_CLK |= 0x1;
 		} else {
-			REG_SCFG_EXT = 0x83000000;
 			REG_SCFG_CLK = 0x80;
 			fifoSendValue32(FIFO_USER_04, 1);
+		}
+		
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","VRAM_BOOST",0) == 1) {
+			REG_SCFG_EXT = 0x83002000;
+		} else {
+			REG_SCFG_EXT = 0x83000000;
 		}
 
 		if(ntrforwarderini.GetInt("NTR-FORWARDER","RESET_SLOT1",0) == 1) {
@@ -169,8 +175,11 @@ int main(int argc, char **argv) {
 
 	std::string filename;
 	std::string gamename;
+	std::string savename;
 
 	if (!fatInitDefault()) {
+		BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language);
+		
 		// Subscreen as a console
 		videoSetModeSub(MODE_0_2D);
 		vramSetBankH(VRAM_H_SUB_BG);
@@ -194,12 +203,37 @@ int main(int argc, char **argv) {
 		break;
 		}
 		
-		gamename = "sd:/<<<Start NDS Path                                                                                                                                                                                                                                  End NDS Path>>>";
+		gamename = "sd:/<<<Start NDS Path                                                                                                                                                                                                                            End NDS Path>>>";
+		savename = ReplaceAll(gamename, ".nds", ".sav");
+		
+		if (access(savename.c_str(), F_OK)) {
+			consoleDemoInit();
+			iprintf ("Creating save file...\n");
+
+			static const int BUFFER_SIZE = 4096;
+			char buffer[BUFFER_SIZE];
+			memset(buffer, 0, sizeof(buffer));
+
+			int savesize = 524288;	// 512KB (default size for most games)
+
+			FILE *pFile = fopen(savename.c_str(), "wb");
+			if (pFile) {
+				for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
+					fwrite(buffer, 1, sizeof(buffer), pFile);
+				}
+				fclose(pFile);
+			}
+			iprintf ("Done!\n");
+
+		}
 
 				CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
 				std::string path = gamename;
+				std::string savepath = savename;
 				path = ReplaceAll( path, "sd:/", "fat:/");
-				bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH",path);
+				savepath = ReplaceAll( savepath, "sd:/", "fat:/");
+				bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", path);
+				bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
 				bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
 				filename = bootstrapini.GetString("NDS-BOOTSTRAP", "BOOTSTRAP_PATH","");
 				filename = ReplaceAll( filename, "fat:/", "sd:/");
