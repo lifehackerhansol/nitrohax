@@ -41,13 +41,37 @@
 
 #include "Bot00.h"
 #include "Bot01.h"
+// Japanese
+#include "Bot02JA.h"
+#include "Bot03JA.h"
+#include "Bot04JA.h"
+#include "Bot05JA.h"
+// English
 #include "Bot02.h"
 #include "Bot03.h"
 #include "Bot04.h"
 #include "Bot05.h"
-#include "Bot06.h"
-#include "Bot07.h"
-#include "Bot08.h"
+// French
+#include "Bot02FR.h"
+#include "Bot03FR.h"
+#include "Bot04FR.h"
+#include "Bot05FR.h"
+// German
+#include "Bot02DE.h"
+#include "Bot03DE.h"
+#include "Bot04DE.h"
+#include "Bot05DE.h"
+// Italian
+#include "Bot02IT.h"
+#include "Bot03IT.h"
+#include "Bot04IT.h"
+#include "Bot05IT.h"
+// Spanish
+#include "Bot02ES.h"
+#include "Bot03ES.h"
+#include "Bot04ES.h"
+#include "Bot05ES.h"
+
 #include "Bot09.h"
 #include "Bot10.h"
 
@@ -337,9 +361,7 @@ void CartridgePromptNoHS() {
 
 }
 
-void BootSplashDSi() {
-
-	CIniFile ntrlauncher_config( "sd:/nds/ntr_forwarder.ini" );
+void BootSplashDSi(bool HealthandSafety_MSG, int language) {
 
 	swiDecompressLZSSVram ((void*)DSi01Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
 	swiDecompressLZSSVram ((void*)BotDSi00Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
@@ -351,49 +373,286 @@ void BootSplashDSi() {
 	swiDecompressLZSSVram ((void*)DSi01Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
 	swiDecompressLZSSVram ((void*)BotDSi00Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
 	vramcpy_ui (&BG_PALETTE[0], DSi02Pal, DSi02PalLen);
-	vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi01Pal, BotDSi01PalLen);
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 6:
+		case 7:
+			vramcpy_ui (&BG_PALETTE_SUB[0], Bot01Pal, Bot01PalLen);
+			break;
+		case 1:
+		default:
+			vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi01Pal, BotDSi01PalLen);
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)DSi01Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi00Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi00Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
 	vramcpy_ui (&BG_PALETTE[0], DSi02Pal, DSi02PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi01Pal, BotDSi01PalLen); }
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot01Pal, Bot01PalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi01Pal, BotDSi01PalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 	
 	swiDecompressLZSSVram ((void*)DSi01Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi01Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot01Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi01Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi02Pal, DSi02PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi02Pal, BotDSi02PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02JAPal, Bot02JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi02Pal, BotDSi02PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02FRPal, Bot02FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02DEPal, Bot02DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02ITPal, Bot02ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02ESPal, Bot02ESPalLen); }
+			break;
+	}
 	
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 	
 	swiDecompressLZSSVram ((void*)DSi02Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi02Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi02Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi03Pal, DSi03PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi03Pal, BotDSi03PalLen); }
-	
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03JAPal, Bot03JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi03Pal, BotDSi03PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03FRPal, Bot03FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03DEPal, Bot03DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ITPal, Bot03ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ESPal, Bot03ESPalLen); }
+			break;
+	}	
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)DSi03Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi03Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi03Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi03Pal, DSi03PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi03Pal, BotDSi03PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03JAPal, Bot03JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi03Pal, BotDSi03PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03FRPal, Bot03FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03DEPal, Bot03DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ITPal, Bot03ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ESPal, Bot03ESPalLen); }
+			break;
+	}	
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)DSi04Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi04Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi04Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi04Pal, DSi04PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi04Pal, BotDSi04PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04JAPal, Bot04JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi04Pal, BotDSi04PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04FRPal, Bot04FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04DEPal, Bot04DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ITPal, Bot04ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ESPal, Bot04ESPalLen); }
+			break;
+	}	
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)DSi05Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi05Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi05Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi05Pal, DSi05PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi05Pal, BotDSi05PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot05JAPal, Bot05JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi05Pal, BotDSi05PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot05FRPal, Bot05FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot05DEPal, Bot05DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot05ITPal, Bot05ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot05ESPal, Bot05ESPalLen); }
+			break;
+	}	
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 	
@@ -514,8 +773,24 @@ void BootSplashDSi() {
 
 	// Display Cartridge Prompt animation until cartridge inserted. (skipped if one already inserted)
 	if(REG_SCFG_MC == 0x11) { 
-		if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) {
-			do { CartridgePromptDSi(); } 
+		if(HealthandSafety_MSG) {
+			do {
+				switch (language) {
+					case 0:
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					case 7:
+						CartridgePromptNoHS();
+						break;
+					case 1:
+					default:
+						CartridgePromptDSi();
+						break;
+				}
+			}
 			while (REG_SCFG_MC == 0x11);
 		} else {
 			do { CartridgePromptNoHS(); } 
@@ -527,51 +802,265 @@ void BootSplashDSi() {
 	for (int i = 0; i < 80; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)DSi29Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi06Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi06Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi29Pal, DSi29PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi06Pal, BotDSi06PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04JAPal, Bot04JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi06Pal, BotDSi06PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04FRPal, Bot04FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04DEPal, Bot04DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ITPal, Bot04ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ESPal, Bot04ESPalLen); }
+			break;
+	}	
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)DSi30Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi07Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi07Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi30Pal, DSi30PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi07Pal, BotDSi07PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03JAPal, Bot03JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi07Pal, BotDSi07PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03FRPal, Bot03FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03DEPal, Bot03DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ITPal, Bot03ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ESPal, Bot03ESPalLen); }
+			break;
+	}	
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)DSi31Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi08Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi08Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi31Pal, DSi31PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi08Pal, BotDSi08PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02JAPal, Bot02JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi08Pal, BotDSi08PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02FRPal, Bot02FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02DEPal, Bot02DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02ITPal, Bot02ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02ESPal, Bot02ESPalLen); }
+			break;
+	}	
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 	
 	swiDecompressLZSSVram ((void*)DSi32Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi09Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot01Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi09Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi32Pal, DSi32PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi09Pal, BotDSi09PalLen); }
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot01Pal, Bot01PalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi09Pal, BotDSi09PalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 	
 	swiDecompressLZSSVram ((void*)DSi33Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi10Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot00Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi10Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi33Pal, DSi33PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi10Pal, BotDSi10PalLen); }
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot00Pal, Bot00PalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi10Pal, BotDSi10PalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }	
 
 	swiDecompressLZSSVram ((void*)DSi34Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi11Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi11Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], DSi34Pal, DSi34PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi11Pal, BotDSi11PalLen); }
+	switch (language) {
+		case 0:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi11Pal, BotDSi11PalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)DSi35Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)BotDSi00Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)BotDSi00Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
 	vramcpy_ui (&BG_PALETTE[0], DSi35Pal, DSi35PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi00Pal, BotDSi00PalLen); }
+	if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], BotDSi00Pal, BotDSi00PalLen); }
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }	
 
@@ -581,9 +1070,9 @@ void BootSplashDSi() {
 	if(REG_SCFG_MC == 0x11) { ErrorNoCard(); }
 }
 
-void BootSplashDS() {
+void BootSplashDS(bool HealthandSafety_MSG, int language) {
 
-	CIniFile ntrlauncher_config( "sd:/nds/ntr_forwarder.ini" );
+	CIniFile ntrlauncher_config( "sd:/_nds/ntr_forwarder.ini" );
 
 	// offsetting palletes by one frame during the fade in seems to fix black flicker at start.	
 	// only did this for about 5 frames. (time it takes for bottom screen to fade in)
@@ -609,37 +1098,235 @@ void BootSplashDS() {
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 	
 	swiDecompressLZSSVram ((void*)Top01Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot01Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot01Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
 	vramcpy_ui (&BG_PALETTE[0], Top02Pal, Top02PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02Pal, Bot02PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02JAPal, Bot02JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02Pal, Bot02PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02FRPal, Bot02FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02DEPal, Bot02DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02ITPal, Bot02ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02ESPal, Bot02ESPalLen); }
+			break;
+	}
 	
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 	
 	swiDecompressLZSSVram ((void*)Top02Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot02Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], Top03Pal, Top03PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03Pal, Bot03PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03JAPal, Bot03JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03Pal, Bot03PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03FRPal, Bot03FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03DEPal, Bot03DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ITPal, Bot03ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ESPal, Bot03ESPalLen); }
+			break;
+	}
 	
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)Top03Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot03Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03FRPal, Bot03FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03DEPal, Bot03DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ITPal, Bot03ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ESPal, Bot03ESPalLen); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], Top04Pal, Top04PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04Pal, Bot04PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04JAPal, Bot04JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04Pal, Bot04PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04FRPal, Bot04FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04DEPal, Bot04DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ITPal, Bot04ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ESPal, Bot04ESPalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)Top04Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot04Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], Top05Pal, Top05PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04Pal, Bot04PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04JAPal, Bot04JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04Pal, Bot04PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04FRPal, Bot04FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04DEPal, Bot04DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ITPal, Bot04ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ESPal, Bot04ESPalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)Top05Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot05Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], Top05Pal, Top05PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot05Pal, Bot05PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot05JAPal, Bot05JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot05Pal, Bot05PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot05ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
@@ -775,8 +1462,24 @@ void BootSplashDS() {
 
 	// Display Cartridge Prompt animation until cartridge inserted. (skipped if one already inserted)
 	if(REG_SCFG_MC == 0x11) { 
-		if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) {
-			do { CartridgePrompt(); } 
+		if(HealthandSafety_MSG) {
+			do {
+				switch (language) {
+					case 0:
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					case 7:
+						CartridgePromptNoHS();
+						break;
+					case 1:
+					default:
+						CartridgePrompt();
+						break;
+				}
+			}
 			while (REG_SCFG_MC == 0x11);
 		} else {
 			do { CartridgePromptNoHS(); } 
@@ -788,37 +1491,169 @@ void BootSplashDS() {
 	for (int i = 0; i < 80; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)Top32Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot06Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot04ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], Top32Pal, Top32PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot06Pal, Bot06PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04JAPal, Bot04JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04Pal, Bot04PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04FRPal, Bot04FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04DEPal, Bot04DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ITPal, Bot04ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot04ESPal, Bot04ESPalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 	
 	swiDecompressLZSSVram ((void*)Top33Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot07Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot03ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], Top33Pal, Top33PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot07Pal, Bot07PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03JAPal, Bot03JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03Pal, Bot03PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03FRPal, Bot03FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03DEPal, Bot03DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ITPal, Bot03ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot03ESPal, Bot03ESPalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }	
 
 	swiDecompressLZSSVram ((void*)Top34Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot08Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02JATiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02DETiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot02ESTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+			break;
+	}
 	vramcpy_ui (&BG_PALETTE[0], Top34Pal, Top34PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot08Pal, Bot08PalLen); }
+	switch (language) {
+		case 0:
+		case 6:
+		case 7:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02JAPal, Bot02JAPalLen); }
+			break;
+		case 1:
+		default:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02Pal, Bot02PalLen); }
+			break;
+		case 2:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02FRPal, Bot02FRPalLen); }
+			break;
+		case 3:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02DEPal, Bot02DEPalLen); }
+			break;
+		case 4:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02ITPal, Bot02ITPalLen); }
+			break;
+		case 5:
+			if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot02ESPal, Bot02ESPalLen); }
+			break;
+	}
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)Top35Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot09Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot09Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
 	vramcpy_ui (&BG_PALETTE[0], Top35Pal, Top35PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot09Pal, Bot09PalLen); }
+	if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot09Pal, Bot09PalLen); }
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
 	swiDecompressLZSSVram ((void*)Top36Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { swiDecompressLZSSVram ((void*)Bot10Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
+	if(HealthandSafety_MSG) { swiDecompressLZSSVram ((void*)Bot10Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback); }
 	vramcpy_ui (&BG_PALETTE[0], Top36Pal, Top36PalLen);
-	if(ntrlauncher_config.GetInt("NTRFORWARDER","HEALTHSAFETYMSG",0) == 1) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot10Pal, Bot10PalLen); }
+	if(HealthandSafety_MSG) { vramcpy_ui (&BG_PALETTE_SUB[0], Bot10Pal, Bot10PalLen); }
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
@@ -835,7 +1670,7 @@ void BootSplashDS() {
 
 }
 
-void BootSplashInit(bool UseNTRSplash) {
+void BootSplashInit(bool UseNTRSplash, bool HealthandSafety_MSG, int language) {
 
 	videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE);
 	videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE);
@@ -852,16 +1687,10 @@ void BootSplashInit(bool UseNTRSplash) {
 		bgMapSub[i] = (u16)i;
 	}
 	
-	int pressed = keysDown();
-
-	if ( pressed & KEY_A ) {
-		BootSplashDSi();
+	if( UseNTRSplash ) {
+		BootSplashDS(HealthandSafety_MSG, language);
 	} else {
-		if( UseNTRSplash ) {
-			BootSplashDS();
-		} else {
-			BootSplashDSi();
-		}
+		BootSplashDSi(HealthandSafety_MSG, language);
 	}
 }
 

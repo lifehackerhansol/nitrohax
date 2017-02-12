@@ -39,7 +39,6 @@
 int main(int argc, const char* argv[]) {
 
 	REG_SCFG_CLK = 0x85;
-	REG_SCFG_EXT = 0x8307F100;
 
 	// NTR Mode/Splash used by default
 	bool UseNTRSplash = true;
@@ -56,11 +55,11 @@ int main(int argc, const char* argv[]) {
 	int pressed = keysDown();
 
 	if (fatInitDefault()) {
-		CIniFile ntrlauncher_config( "sd:/nds/ntr_forwarder.ini" );
+		CIniFile ntrlauncher_config( "sd:/_nds/ntr_forwarder.ini" );
 		
-		if(ntrlauncher_config.GetInt("NTRFORWARDER","NTRCLOCK",0) == 0) { UseNTRSplash = false; }
+		if(ntrlauncher_config.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) { UseNTRSplash = false; }
 
-		if(ntrlauncher_config.GetInt("NTRFORWARDER","DISABLEANIMATION",0) == 1) {
+		if(ntrlauncher_config.GetInt("NTR-FORWARDER","DISABLE_ANIMATION",0) == 1) {
 			if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash); } else { if( UseNTRSplash == true ) { REG_SCFG_CLK = 0x80; } }
 		} else {
 			if( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash); } } else { BootSplashInit(UseNTRSplash); }
@@ -99,12 +98,12 @@ int main(int argc, const char* argv[]) {
 
 	strcpy(IniFile.var1,"[Dir Info]");
 	IniFile.var1nl = 0x0A0D;
-	strcpy(IniFile.var2,"fullName=fat1:/<<<Start NDS Path                                                                                                                                                                                                                                  End NDS Path>>>");
+	strcpy(IniFile.var2,"fullName=fat1:/<<<Start NDS Path                                                                                                                                                                                                                          End NDS Path>>>");
 	IniFile.var2nl = 0x0A0D;
 	strcpy(IniFile.var3,"RomType=0");
 	IniFile.var3nl = 0x0A0D;
 	
-	inifile = fopen("sd:/_dstwofwd/autoboot.ini","wb");
+	inifile = fopen("sd:/_nds/dstwoautoboot.ini","wb");
 	fwrite(&IniFile,1,sizeof(IniFile),inifile);
 	fclose(inifile);	
 	
