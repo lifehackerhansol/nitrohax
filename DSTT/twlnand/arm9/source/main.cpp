@@ -34,6 +34,19 @@
 
 using namespace std;
 
+//---------------------------------------------------------------------------------
+void doPause() {
+//---------------------------------------------------------------------------------
+	iprintf("Press start...\n");
+	while(1) {
+		scanKeys();
+		if(keysDown() & KEY_START)
+			break;
+		swiWaitForVBlank();
+	}
+	scanKeys();
+}
+
 void runFile(string filename) {
 	vector<char*> argarray;
 
@@ -70,8 +83,8 @@ void runFile(string filename) {
 int main(int argc, char **argv) {
 
 	REG_SCFG_CLK = 0x85;
-	REG_SCFG_EXT = 0x83000000; // NAND/SD Access
 	
+	bool HealthandSafety_MSG = false;
 	bool UseNTRSplash = true;
 	bool TriggerExit = false;
 
@@ -80,19 +93,28 @@ int main(int argc, char **argv) {
 
 	if (fatInitDefault()) {
 
-		CIniFile bootstrapini( "sd:/nds/ntr_forwarder.ini" );
+		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
 
-		if(bootstrapini.GetInt("NTRFORWARDER","NTRCLOCK",0) == 0) { UseNTRSplash = false; }
-
-		if(bootstrapini.GetInt("NTRFORWARDER","DISABLEANIMATION",0) == 1) {
-			if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash); } else { if( UseNTRSplash == true ) { REG_SCFG_CLK = 0x80; } }
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","HEALTH&SAFETY_MSG",0) == 1) { HealthandSafety_MSG = true; }
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) if( pressed & KEY_A ) {} else { UseNTRSplash = false; }
+		else if( pressed & KEY_A ) { UseNTRSplash = false; }
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","DISABLE_ANIMATION",0) == 1) {
+			if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); }
 		} else {
-			if( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash); } } else { BootSplashInit(UseNTRSplash); }
+			if( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); } } else { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); }
 		}
 
-		if(bootstrapini.GetInt("NTRFORWARDER","NTRCLOCK",0) == 1) {
+		if(!UseNTRSplash) {
+			REG_SCFG_CLK |= 0x1;
+		} else {
 			REG_SCFG_CLK = 0x80;
 			fifoSendValue32(FIFO_USER_04, 1);
+		}
+		
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","VRAM_BOOST",0) == 1) {
+			REG_SCFG_EXT = 0x83002000;
+		} else {
+			REG_SCFG_EXT = 0x83000000;
 		}
 
 		fifoSendValue32(FIFO_USER_01, 1);
@@ -118,16 +140,31 @@ int main(int argc, char **argv) {
 		IniFile.var3nl = 0x0A0D;
 		strcpy(IniFile.var4,"DEFAULT_RESET=false");	// For soft-reset
 	
-		inifile = fopen("sd:/_dsttfwd/YSMenu.ini","wb");
+		inifile = fopen("sd:/_nds/YSMenu.ini","wb");
 		fwrite(&IniFile,1,sizeof(IniFile),inifile);
 		fclose(inifile);
 
-		runFile("sd:/_dsttfwd/loadcard.nds");
+		runFile("sd:/_nds/loadcard_dstt.nds");
 	} else {
-		if ( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash); } } else { BootSplashInit(UseNTRSplash); }
+		if ( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); } } else { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); }
+		// Subscreen as a console
+		videoSetModeSub(MODE_0_2D);
+		vramSetBankH(VRAM_H_SUB_BG);
+		consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);	
+
+		iprintf ("fatinitDefault failed!\n");		
+			
+		doPause();
+		
+		TriggerExit = true;
 	}
 	
 	while(1) { 
+		if(TriggerExit) { 
+		do { swiWaitForVBlank(); scanKeys(); } while (!keysDown());
+		break;
+		}
+
 		swiWaitForVBlank(); 
 	}
 	return 0;

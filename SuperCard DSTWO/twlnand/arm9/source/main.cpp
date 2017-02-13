@@ -40,12 +40,11 @@ int main(int argc, const char* argv[]) {
 
 	REG_SCFG_CLK = 0x85;
 
-	// NTR Mode/Splash used by default
+	bool HealthandSafety_MSG = false;
 	bool UseNTRSplash = true;
+	bool TWLVRAM = false;
 
 	swiWaitForVBlank();
-
-	dsi_forceTouchDsmode();
 
 	u32 ndsHeader[0x80];
 	char gameid[4];
@@ -55,18 +54,22 @@ int main(int argc, const char* argv[]) {
 	int pressed = keysDown();
 
 	if (fatInitDefault()) {
-		CIniFile ntrlauncher_config( "sd:/_nds/ntr_forwarder.ini" );
+		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
 		
-		if(ntrlauncher_config.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) { UseNTRSplash = false; }
-
-		if(ntrlauncher_config.GetInt("NTR-FORWARDER","DISABLE_ANIMATION",0) == 1) {
-			if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash); } else { if( UseNTRSplash == true ) { REG_SCFG_CLK = 0x80; } }
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","HEALTH&SAFETY_MSG",0) == 1) { HealthandSafety_MSG = true; }
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) if( pressed & KEY_A ) {} else { UseNTRSplash = false; }
+		else if( pressed & KEY_A ) { UseNTRSplash = false; }
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","DISABLE_ANIMATION",0) == 1) {
+			if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); }
 		} else {
-			if( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash); } } else { BootSplashInit(UseNTRSplash); }
+			if( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); } } else { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); }
 		}
 
+		if(ntrforwarderini.GetInt("NTR-FORWARDER","VRAM_BOOST",0) == 1) {
+			TWLVRAM = true;
+		}
 	} else {
-		if ( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash); } } else { BootSplashInit(UseNTRSplash); }
+		if ( pressed & KEY_B ) { if(REG_SCFG_MC == 0x11) { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); } } else { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); }
 	}
 
 	// Tell Arm7 to start Cart Reset
@@ -110,7 +113,7 @@ int main(int argc, const char* argv[]) {
 	while(1) {
 		if(REG_SCFG_MC == 0x11) { 
 		break; } else {
-			runLaunchEngine ();
+			runLaunchEngine (TWLVRAM);
 		}
 	}
 	return 0;

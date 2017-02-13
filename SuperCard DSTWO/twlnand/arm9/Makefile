@@ -129,6 +129,7 @@ $(ARM9ELF)	:	$(OFILES)
 # graphics
 #---------------------------------------------------------------------------------
 #Cartridge Wait Prompt (bottom screen)
+# English
 CartPrompt01.s			:	../$(IMAGES)/CartPrompt01.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
 
@@ -140,6 +141,31 @@ CartPrompt03.s			:	../$(IMAGES)/CartPrompt03.bmp
 
 CartPrompt04.s			:	../$(IMAGES)/CartPrompt04.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+# French
+CartPrompt01FR.s			:	../$(IMAGES)/CartPrompt01FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt02FR.s			:	../$(IMAGES)/CartPrompt02FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt03FR.s			:	../$(IMAGES)/CartPrompt03FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt04FR.s			:	../$(IMAGES)/CartPrompt04FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+# Italian
+CartPrompt01IT.s			:	../$(IMAGES)/CartPrompt01IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt02IT.s			:	../$(IMAGES)/CartPrompt02IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt03IT.s			:	../$(IMAGES)/CartPrompt03IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt04IT.s			:	../$(IMAGES)/CartPrompt04IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
 
 #DSi Cartridge Wait Prompt (bottom screen)
 DSiCartPrompt01.s			:	../$(IMAGES)/DSiCartPrompt01.bmp

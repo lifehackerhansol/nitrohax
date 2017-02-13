@@ -24,10 +24,21 @@
  
 #include "bios_decompress_callback.h"
 
+// English
 #include "CartPrompt01.h"
 #include "CartPrompt02.h"
 #include "CartPrompt03.h"
 #include "CartPrompt04.h"
+// French
+#include "CartPrompt01FR.h"
+#include "CartPrompt02FR.h"
+#include "CartPrompt03FR.h"
+#include "CartPrompt04FR.h"
+// Italian
+#include "CartPrompt01IT.h"
+#include "CartPrompt02IT.h"
+#include "CartPrompt03IT.h"
+#include "CartPrompt04IT.h"
 
 #include "DSiCartPrompt01.h"
 #include "DSiCartPrompt02.h"
@@ -262,6 +273,105 @@ void CartridgePrompt() {
 	for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
 
 }
+
+void CartridgePromptFR() {
+	
+	swiDecompressLZSSVram ((void*)Bot05FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], Bot05FRPal, Bot05FRPalLen);
+
+	for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
+	
+	swiDecompressLZSSVram ((void*)CartPrompt04FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt04FRPal, CartPrompt04FRPalLen);
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt03FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt03FRPal, CartPrompt03FRPalLen);
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt02FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt02FRPal, CartPrompt02FRPalLen);	
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt01FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt01FRPal, CartPrompt01FRPalLen);	
+
+	for (int i = 0; i < 40; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt02FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt02FRPal, CartPrompt02FRPalLen);	
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt03FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt03FRPal, CartPrompt03FRPalLen);
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt04FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt04FRPal, CartPrompt04FRPalLen);
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)Bot05FRTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], Bot05FRPal, Bot05PalLen);
+
+	for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
+
+}
+
+void CartridgePromptIT() {
+	
+	swiDecompressLZSSVram ((void*)Bot05ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], Bot05ITPal, Bot05ITPalLen);
+
+	for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
+	
+	swiDecompressLZSSVram ((void*)CartPrompt04ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt04ITPal, CartPrompt04ITPalLen);
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt03ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt03ITPal, CartPrompt03ITPalLen);
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt02ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt02ITPal, CartPrompt02ITPalLen);	
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt01ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt01ITPal, CartPrompt01ITPalLen);	
+
+	for (int i = 0; i < 40; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt02ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt02ITPal, CartPrompt02ITPalLen);	
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt03ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt03ITPal, CartPrompt03ITPalLen);
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)CartPrompt04ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt04ITPal, CartPrompt04ITPalLen);
+
+	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
+
+	swiDecompressLZSSVram ((void*)Bot05ITTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE_SUB[0], Bot05ITPal, Bot05ITPalLen);
+
+	for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
+
+}
+
 
 void CartridgePromptDSi() {
 	
@@ -777,17 +887,27 @@ void BootSplashDSi(bool HealthandSafety_MSG, int language) {
 			do {
 				switch (language) {
 					case 0:
-					case 2:
-					case 3:
-					case 4:
-					case 5:
-					case 6:
-					case 7:
 						CartridgePromptNoHS();
 						break;
 					case 1:
 					default:
 						CartridgePromptDSi();
+						break;
+					case 2:
+						CartridgePromptFR();
+						break;
+					case 3:
+						CartridgePromptNoHS();
+						break;
+					case 4:
+						CartridgePromptIT();
+						break;
+					case 5:
+						CartridgePromptNoHS();
+						break;
+					case 6:
+					case 7:
+						CartridgePromptNoHS();
 						break;
 				}
 			}
@@ -1466,17 +1586,27 @@ void BootSplashDS(bool HealthandSafety_MSG, int language) {
 			do {
 				switch (language) {
 					case 0:
-					case 2:
-					case 3:
-					case 4:
-					case 5:
-					case 6:
-					case 7:
 						CartridgePromptNoHS();
 						break;
 					case 1:
 					default:
 						CartridgePrompt();
+						break;
+					case 2:
+						CartridgePromptFR();
+						break;
+					case 3:
+						CartridgePromptNoHS();
+						break;
+					case 4:
+						CartridgePromptIT();
+						break;
+					case 5:
+						CartridgePromptNoHS();
+						break;
+					case 6:
+					case 7:
+						CartridgePromptNoHS();
 						break;
 				}
 			}

@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-void runLaunchEngine (void);
+void runLaunchEngine (bool TWLVRAM);
 
 #ifdef __cplusplus
 }
