@@ -22,7 +22,8 @@
 extern unsigned long cheat_engine_size;
 extern unsigned long intr_orig_return_offset;
 
-extern const u8 cheat_engine_start[]; 
+extern const u8 cheat_engine_start[];
+
 #define CHEAT_CODE_END	0xCF000000
 #define CHEAT_ENGINE_RELOCATE	0xCF000001
 #define CHEAT_ENGINE_HOOK	0xCF000002

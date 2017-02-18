@@ -59,6 +59,7 @@ Red = 00, Yellow = 01, Green = 10, Blue = 11
 
 Written by Chishm
 --------------------------------------------------------------------------*/
+/* Disabled for non debug version. Enable to debug card init problems
 static void arm9_errorOutput (u32 code) {
 	int i, j, k;
 	u16 colour;
@@ -113,6 +114,7 @@ static void arm9_errorOutput (u32 code) {
 		}
 	}
 }
+*/
 
 /*-------------------------------------------------------------------------
 arm9_main
@@ -210,7 +212,8 @@ void arm9_main (void) {
 	ipcSendState(ARM9_READY);
 	while (ipcRecvState() != ARM7_BOOTBIN) {
 		if (ipcRecvState() == ARM7_ERR) {
-			arm9_errorOutput (arm9_errorCode);
+			// Re-enable to debug card init issues.
+			// arm9_errorOutput (arm9_errorCode);
 			// Halt after displaying error code
 			while(1);
 		}

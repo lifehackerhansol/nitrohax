@@ -18,7 +18,6 @@
 
 #include "cheat.h"
 #include <stdio.h>
-#include <inttypes.h>
 #include <iterator>
 
 #include "ui.h"
@@ -50,23 +49,23 @@ void CheatFolder::enablingSubCode (void)
 	if (allowOneOnly) {
 		enableAll (false);
 	}
-}
+}	
 
 std::list<CheatWord> CheatFolder::getEnabledCodeData (void)
 {
 	std::list<CheatWord> codeData;
 	CheatCode* cheatCode;
-
+	
 	for (std::vector<CheatBase*>::iterator curItem = contents.begin(); curItem != contents.end(); curItem++) {
 		std::list<CheatWord> curCodeData = (*curItem)->getEnabledCodeData();
 		cheatCode = dynamic_cast<CheatCode*>(*curItem);
 		if (cheatCode && cheatCode->isMaster()) {
-			codeData.insert( codeData.begin(), curCodeData.begin(), curCodeData.end());
+			codeData.insert( codeData.begin(), curCodeData.begin(), curCodeData.end());  
 		} else {
-			codeData.insert( codeData.end(), curCodeData.begin(), curCodeData.end());
+			codeData.insert( codeData.end(), curCodeData.begin(), curCodeData.end());  
 		}
 	}
-
+	
 	return codeData;
 }
 
@@ -76,11 +75,11 @@ std::list<CheatWord> CheatCode::getEnabledCodeData (void)
 	if (enabled) {
 		codeData = cheatData;
 	}
-
+	
 	return codeData;
 }
 
-void CheatCode::setCodeData (const std::string& data)
+void CheatCode::setCodeData (const std::string& data) 
 {
 	const char* codeData = data.c_str();
 	char codeinfo[30];
@@ -88,11 +87,11 @@ void CheatCode::setCodeData (const std::string& data)
 	int codeLen = strlen (codeData);
 	int codePos = 0;
 	int readNum = 1;
-
+	
 	const char ALWAYS_ON[] = "always_on";
 	const char ON[] = "on";
 	const char MASTER[] = "master";
-
+	
 	if (sscanf (codeData, "%29s", codeinfo) > 0) {
 		if (strcmp(codeinfo, ALWAYS_ON) == 0) {
 			always_on = true;
@@ -106,7 +105,7 @@ void CheatCode::setCodeData (const std::string& data)
 			codePos += strlen (MASTER);
 		}
 	}
-
+	
 	while ((codePos < codeLen) && (readNum > 0)) {
 		// Move onto the next hexadecimal value
 		codePos += strcspn (codeData + codePos, HEX_CHARACTERS);
@@ -121,7 +120,7 @@ void CheatCode::setCodeData (const std::string& data)
 			}
 		}
 	}
-
+	
 	if (master && (cheatData.size() >= 2)) {
 		if ((*(cheatData.begin()) & 0xFF000000) == 0xCF000000) {
 			// Master code meant for Nitro Hax
@@ -157,7 +156,7 @@ void CheatGame::setGameid (const std::string& id)
 {
 	const char* idData = id.c_str();
 	const char* crcData;
-
+	
 	headerCRC = 0;
 	if (id.size() < 9) {
 		return;
@@ -166,30 +165,30 @@ void CheatGame::setGameid (const std::string& id)
 	gameid[1] = id.at(1);
 	gameid[2] = id.at(2);
 	gameid[3] = id.at(3);
-
+	
 	headerCRC = 0;
 	crcData = strpbrk (idData+4, HEX_CHARACTERS);
 	if (crcData) {
-		sscanf (crcData, "%" SCNx32, &headerCRC);
+		sscanf (crcData, "%x", &headerCRC);
 		// CRC is inverted in the cheat list
 		headerCRC = ~headerCRC;
 	}
 }
 
 
-CheatCodelist::~CheatCodelist(void)
+CheatCodelist::~CheatCodelist(void) 
 {
 	for (std::vector<CheatBase*>::iterator curItem = getContents().begin(); curItem != getContents().end(); curItem++) {
 		delete (*curItem);
 	}
-}
+} 
 
 #define BUFFER_SIZE 1024
-bool CheatCodelist::nextToken (FILE* fp, std::string& token, TOKEN_TYPE& tokenType)
+std::string CheatCodelist::nextToken (FILE* fp, TOKEN_TYPE& tokenType)
 {
 	char tokenData[BUFFER_SIZE];
-	token.clear();
-
+	std::string token;
+	
 	if (fscanf(fp, " <%1023[^>]", tokenData) > 0) {
 		if (tokenData[0] == '/') {
 			tokenType = TOKEN_TAG_END;
@@ -212,16 +211,16 @@ bool CheatCodelist::nextToken (FILE* fp, std::string& token, TOKEN_TYPE& tokenTy
 			token += tokenData;
 		} while (fscanf(fp, "%1023[^<]", tokenData) > 0);
 		if (token.empty()) {
-			return false;
+			return token;
 		}
 	} else {
-		return false;
+		return token;
 	}
 
-	return true;
+	return token;
 }
-
-bool CheatCodelist::load (FILE* fp)
+	
+bool CheatCodelist::load (FILE* fp, const char gameid[4], uint32_t headerCRC, bool filter)
 {
 	enum {state_normal, state_name, state_note, state_codes, state_gameid, state_allowedon} state = state_normal;
 	CheatBase* curItem = this;
@@ -233,15 +232,18 @@ bool CheatCodelist::load (FILE* fp)
 	TOKEN_TYPE tokenType;
 	int depth = 0;
 	bool done = false;
-
-	while (nextToken (fp, token, tokenType) && (tokenType != TOKEN_TAG_START || token != "codelist")) ;
-
+	
+	do	
+	token = nextToken (fp, tokenType);
+	while (!token.empty() && (tokenType != TOKEN_TAG_START || token != "codelist")) ;
+	
 	if (token != "codelist") {
 		return false;
 	}
 	depth ++;
-
-	while (nextToken (fp, token, tokenType) && !done) {
+	
+	while (!token.empty() && !done) {
+		token = nextToken (fp, tokenType);
 		switch (tokenType) {
 			case TOKEN_DATA:
 				switch (state) {
@@ -252,19 +254,19 @@ bool CheatCodelist::load (FILE* fp)
 						curItem->note = token;
 						break;
 					case state_codes:
-						cheatCode = dynamic_cast<CheatCode*>(curItem);
+						cheatCode = dynamic_cast<CheatCode*>(curItem); 
 						if (cheatCode) {
 							cheatCode->setCodeData (token);
 						}
 						break;
 					case state_gameid:
-						cheatGame = dynamic_cast<CheatGame*>(curItem);
+						cheatGame = dynamic_cast<CheatGame*>(curItem); 
 						if (cheatGame) {
 							cheatGame->setGameid (token);
 						}
 						break;
 					case state_allowedon:
-						cheatFolder = dynamic_cast<CheatFolder*>(curItem);
+						cheatFolder = dynamic_cast<CheatFolder*>(curItem); 
 						if (cheatFolder) {
 							cheatFolder->setAllowOneOnly (!(token == "0"));
 						}
@@ -276,8 +278,7 @@ bool CheatCodelist::load (FILE* fp)
 			case TOKEN_TAG_START:
 				depth++;
 				if (token == "game") {
-					cheatGame = new CheatGame (this);
-					this->addItem (cheatGame);
+					cheatGame = new CheatGame (this);					
 					curItem = cheatGame;
 				} else if (token == "folder") {
 					cheatFolder = dynamic_cast<CheatFolder*>(curItem);
@@ -285,14 +286,14 @@ bool CheatCodelist::load (FILE* fp)
 						newItem = new CheatFolder (cheatFolder);
 						cheatFolder->addItem (newItem);
 						curItem = newItem;
-					}
+					} 
 				} else if (token == "cheat") {
 					cheatFolder = dynamic_cast<CheatFolder*>(curItem);
 					if (cheatFolder) {
 						newItem = new CheatCode (cheatFolder);
 						cheatFolder->addItem (newItem);
 						curItem = newItem;
-					}
+					} 
 				} else if (token == "codelist") {
 					// Should only occur at top level
 					curItem = this;
@@ -307,28 +308,41 @@ bool CheatCodelist::load (FILE* fp)
 					state = state_gameid;
 				} else if (token == "allowedon") {
 					state = state_allowedon;
-				}
+				}				
 				break;
 			case TOKEN_TAG_END:
-				if ((token == "game") ||
-					 (token == "folder") ||
+				if ( (token == "folder") ||
 					 (token == "cheat")
-				) {
+				) {					
 					newItem = curItem->getParent();
 					if (newItem) {
 						curItem = newItem;
 					}
 				} else if (token == "subscription") {
 					done = true;
+				} else  if (token == "game") {
+					if(!filter || ((CheatGame*)curItem)->checkGameid(gameid, headerCRC)) {
+						this->addItem (curItem);
+						newItem = curItem->getParent();
+						if (newItem) {
+							curItem = newItem;
+						}
+					} else {
+						newItem = curItem->getParent();
+						delete (curItem);
+						if (newItem) {
+							curItem = newItem;
+						}
+					}
 				}
-				state = state_normal;
+				state = state_normal;			
 				depth--;
 				break;
 			case TOKEN_TAG_SINGLE:
 				break;
 		}
 	}
-
+	
 	this->name = "Cheat list";
 	return true;
 }
@@ -341,7 +355,7 @@ CheatGame* CheatCodelist::getGame (const char gameid[4], uint32_t headerCRC)
 			return game;
 		}
 	}
-
+	
 	return NULL;
 }
 

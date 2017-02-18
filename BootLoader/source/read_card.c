@@ -269,7 +269,8 @@ int cardInit (tNDSHeader* ndsHeader, u32* chipID)
 		for (i = 0; i < 0x200; i ++) {
 			*secureArea++ = 0xe7ffdeff;
 		}
-		return normalChip ? ERR_SEC_NORM : ERR_SEC_OTHR;
+		// return normalChip ? ERR_SEC_NORM : ERR_SEC_OTHR;
+		return normalChip ? ERR_NONE : ERR_NONE;
 	}
 
 	return ERR_NONE;

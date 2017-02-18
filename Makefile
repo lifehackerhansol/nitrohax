@@ -11,7 +11,7 @@ export TARGET		:=	NitroHax
 export TOPDIR		:=	$(CURDIR)
 
 export VERSION_MAJOR	:= 0
-export VERSION_MINOR	:= 94
+export VERSION_MINOR	:= 99
 export VERSTRING	:=	$(VERSION_MAJOR).$(VERSION_MINOR)
 
 
@@ -32,7 +32,8 @@ checkarm9:
 
 $(TARGET).nds	:	arm7/$(TARGET).elf arm9/$(TARGET).elf
 	ndstool	-c $(TARGET).nds -7 arm7/$(TARGET).elf -9 arm9/$(TARGET).elf \
-			-b $(CURDIR)/icon.bmp "Nitro Hax;DS Game Cheat Tool;Created by Chishm"
+			-b $(CURDIR)/icon.bmp "Nitro Hax;DS Game Cheat Tool;Created by Chishm" \
+			-g CHCT 01 "NTR NITROHAX" -z 80040000 -u 00030004
 
 #---------------------------------------------------------------------------------
 # Create boot loader and link raw binary into ARM9 ELF
@@ -81,4 +82,5 @@ clean:
 	$(MAKE) -C arm7 clean
 	$(MAKE) -C BootLoader clean
 	rm -f arm9/data/load.bin
+	rm -f arm9/source/version.h
 	rm -f $(TARGET).ds.gba $(TARGET).nds $(TARGET).arm7 $(TARGET).arm9

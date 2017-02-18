@@ -46,7 +46,7 @@ static void vramcpy (volatile void* dst, const void* src, int len)
 	}
 }
 
-void runCheatEngine (void* cheats, int cheatLength)
+void runCheatEngine (void* cheats, int cheatLength, bool BoostVRAM)
 {
 	irqDisable(IRQ_ALL);
 
@@ -66,6 +66,8 @@ void runCheatEngine (void* cheats, int cheatLength)
 	// Give the VRAM to the ARM7
 	VRAM_C_CR = VRAM_ENABLE | VRAM_C_ARM7_0x06000000;	
 	
+	if(BoostVRAM == true) { REG_SCFG_EXT=0x03002000; } else { REG_SCFG_EXT=0x03000000; }
+	
 	// Reset into a passme loop
 	REG_EXMEMCNT = 0xffff;
 	*((vu32*)0x027FFFFC) = 0;
@@ -73,3 +75,4 @@ void runCheatEngine (void* cheats, int cheatLength)
 	*((vu32*)0x027FFE24) = (u32)0x027FFE04;
 	swiSoftReset(); 
 }
+

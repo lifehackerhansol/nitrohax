@@ -198,14 +198,14 @@ public:
 	
 	~CheatCodelist ();
 	
-	bool load (FILE* fp);
+	bool load (FILE* fp, const char gameid[4], uint32_t headerCRC, bool filter);
 
 	CheatGame* getGame (const char gameid[4], uint32_t headerCRC);
 	
 private:
 	enum TOKEN_TYPE {TOKEN_DATA, TOKEN_TAG_START, TOKEN_TAG_END, TOKEN_TAG_SINGLE};
 
-	bool nextToken (FILE* fp, std::string& token, TOKEN_TYPE& tokenType);
+	std::string nextToken (FILE* fp, TOKEN_TYPE& tokenType);
 
 } ;
 
