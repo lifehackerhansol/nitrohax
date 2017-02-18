@@ -2,46 +2,51 @@ Nitro Hax
 =========
 
 By Chishm
+Modified to work on Nintendo 3DS by Apache Thunder, Ahezard, and Shutterbug2000.
 
-Nitro Hax is a cheat tool for the Nintendo DS. 
+Nitro Hax is a cheat tool for the Nintendo DS.
 It works with original games only.
+This is not intended to boot flashcarts. Use NTR Launcher for that.
+This does NOT boot 3DS carts. This program is not related to NTR CFW. This is designed for DS games only.
+This program does not yet support TWL carts. (DSi Enhanced games).
+Even if you manage to boot a TWL cart, it will be running in NTR mode and will not have access to DSi specific hardware.
+DSi Enhanced Games will be supported if and when card reading code is updated to accommodate them.
 
 The newest release is available to
 [download](https://www.chishm.com/NitroHax/NitroHax.zip) from the
 [Nitro Hax web page](https://www.chishm.com/NitroHax/index.html).
 
-Usage
+Usage (revised for 3DS. Do NOT attempt to use this build on a original DS/DS Lite. Use Chishm's original build instead)
 =====
 
-1. Patch NitroHax.nds with a DLDI file if you need to.
-2. Copy the NitroHax.nds file to your media device.
-3. Place an Action Replay XML file on your media device.
-4. Start NitroHax.nds from your media device
-   1. One of the following will be loaded automatically if it is found (in order
-   of preference):
-      * "cheats.xml" in the current directory
-      * "/NitroHax/cheats.xml"
-      * "/data/NitroHax/cheats.xml"
-      * "/cheats.xml"
-   2. If no file is found, browse for and select a file to open.
-5. Remove your media device if you want to.
-6. Remove any card that is in Slot-1
-7. Insert the DS game into Slot-1
-8. Choose the cheats you want to enable.
-   1. Some cheats are enabled by default and others may be always on. This is
-   specified in the XML file.
-   2. The keys are:
-      * **A**: Open a folder or toggle a cheat enabled
-      * **B**: Go up a folder or exit the cheat menu if at the top level
-      * **X**: Enable all cheats in current folder
-      * **Y**: Disable all cheats in current folder
-      * **L**: Move up half a screen
-      * **R**: Move down half a screen
-      * **Up**: Move up one line
-      * **Down**: Move down one line
-      * **Start**: Start the game
-9. When you are done, exit the cheat menu.
-10. The game will then start with cheats running.
+1. Install NitroHax.cia with your preferred CIA installer.
+2. Place an Action Replay XML file (cheats.xml) to a location on your 3DS SD card.
+3. Insert the game you intend to use NitroHax with.
+4. Start NitroHax from 3DS Home Menu. If you did not insert a game yet, the program will prompt you to insert one.
+  1. One of the following will be loaded automatically if it is found (in order of preference):
+    * "cheats.xml" in the current directory
+    * "/NitroHax/cheats.xml"
+    * "/data/NitroHax/cheats.xml"
+    * "/cheats.xml"
+  2. If no file is found, browse for and select a file to open.
+5. Choose the cheats you want to enable.
+  1. Some cheats are enabled by default and others may be always on. This is specified in the XML file.
+  2. The keys are:
+    * **A**: Open a folder or toggle a cheat enabled
+    * **B**: Go up a folder or exit the cheat menu if at the top level
+    * **X**: Enable all cheats in current folder
+    * **Y**: Disable all cheats in current folder
+    * **L**: Move up half a screen
+    * **R**: Move down half a screen
+    * **Up**: Move up one line
+    * **Down**: Move down one line
+    * **Start**: Start the game
+	* **Select**: Enable DSi clock speeds. (currently no visible GUI button for this yet)
+6. If you wish to enable TWL clock speeds for your game press select button. This option added to help improve performance of some games.
+7. Do NOT eject the game cartridge once cheats have been loaded. If you change your mind, you will need to restart Nitrohax.
+8. When you're done, exit the cheat menu by pressing the start button.
+9. The game will then start with cheats running.
+10.The DS/DSi bootsplash played prior to starting the game will indicate what CPU speed was selected for your game.
 
 
 Copyright
