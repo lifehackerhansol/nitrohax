@@ -34,6 +34,7 @@ $(TARGET).nds	:	arm7/$(TARGET).elf arm9/$(TARGET).elf
 	ndstool	-c $(TARGET).nds -7 arm7/$(TARGET).elf -9 arm9/$(TARGET).elf \
 			-b $(CURDIR)/icon.bmp "Nitro Hax;DS Game Cheat Tool;Created by Chishm" \
 			-g CHCT 01 "NTR NITROHAX" -z 80040000 -u 00030004
+	python patch_ndsheader_dsiware.py $(CURDIR)/$(TARGET).nds --accessControl 0x00000038
 
 #---------------------------------------------------------------------------------
 # Create boot loader and link raw binary into ARM9 ELF
@@ -83,4 +84,4 @@ clean:
 	$(MAKE) -C BootLoader clean
 	rm -f arm9/data/load.bin
 	rm -f arm9/source/version.h
-	rm -f $(TARGET).ds.gba $(TARGET).nds $(TARGET).arm7 $(TARGET).arm9
+	rm -f $(TARGET).ds.gba $(TARGET).nds $(TARGET).arm7 $(TARGET).arm9 $(TARGET).nds.orig.nds $(TARGET).cia
