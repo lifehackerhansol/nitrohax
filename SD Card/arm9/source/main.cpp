@@ -37,6 +37,11 @@
 
 using namespace std;
 
+typedef struct {
+	char gameTitle[12];			//!< 12 characters for the game title.
+	char gameCode[4];			//!< 4 characters for the game code.
+} sNDSHeadertitlecodeonly;
+
 //---------------------------------------------------------------------------------
 void stop (void) {
 //---------------------------------------------------------------------------------
@@ -93,7 +98,6 @@ void runFile(string filename) {
 		iprintf("Running %s with %d parameters\n", argarray[0], argarray.size());
 		int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 		iprintf("Start failed. Error %i\n", err);
-		doPause();
 	}
 }
 
@@ -115,7 +119,6 @@ int main(int argc, char **argv) {
 
 	bool HealthandSafety_MSG = false;
 	bool UseNTRSplash = true;
-	bool TriggerExit = false;
 
 	scanKeys();
 	int pressed = keysDown();
@@ -127,40 +130,7 @@ int main(int argc, char **argv) {
 		if(ntrforwarderini.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) if( pressed & KEY_A ) {} else { UseNTRSplash = false; }
 		else if( pressed & KEY_A ) { UseNTRSplash = false; }
 		if(ntrforwarderini.GetInt("NTR-FORWARDER","DISABLE_ANIMATION",0) == 0) { if( pressed & KEY_B ) {} else { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); } }
-		if(!UseNTRSplash) {
-			REG_SCFG_CLK |= 0x1;
-		} else {
-			REG_SCFG_CLK = 0x80;
-			fifoSendValue32(FIFO_USER_04, 1);
-		}
-		
-		if(ntrforwarderini.GetInt("NTR-FORWARDER","VRAM_BOOST",0) == 1) {
-			REG_SCFG_EXT = 0x83002000;
-		} else {
-			REG_SCFG_EXT = 0x83000000;
-		}
 
-		if(ntrforwarderini.GetInt("NTR-FORWARDER","RESET_SLOT1",0) == 1) {
-			fifoSendValue32(FIFO_USER_02, 1);
-		}
-
-		fifoSendValue32(FIFO_USER_01, 1);
-		fifoWaitValue32(FIFO_USER_03);
-
-		// Only time SCFG should be locked is for compatiblity with NTR retail stuff.
-		// So NTR SCFG values (that preserve SD access) are always used when locking.
-		// Locking Arm9 SCFG kills SD access. So that will not occur here.
-		/* if(ntrforwarderini.GetInt("NTR-FORWARDER","LOCK_ARM7_SCFG_EXT",0) == 1) {
-			fifoSendValue32(FIFO_USER_05, 1);
-			REG_SCFG_EXT = 0x83000000;
-		} else {
-			if(ntrforwarderini.GetInt("NTR-FORWARDER","ENABLE_ALL_TWLSCFG",0) == 1) {
-				fifoSendValue32(FIFO_USER_06, 1);
-				REG_SCFG_EXT = 0x8307F100;
-			} else {
-				REG_SCFG_EXT = 0x83000000;
-			}
-		} */
 		// Tell Arm7 to apply changes.
 		fifoSendValue32(FIFO_USER_07, 1);
 
@@ -187,65 +157,81 @@ int main(int argc, char **argv) {
 
 		iprintf ("fatinitDefault failed!\n");		
 			
-		doPause();
-		
-		TriggerExit = true;
+		stop();
 	}
-
-	vector<string> extensionList;
-	extensionList.push_back(".nds");
-	extensionList.push_back(".argv");
 
 	while(1) {
 
-		if(TriggerExit) { 
-		do { swiWaitForVBlank(); scanKeys(); } while (!keysDown());
-		break;
-		}
-		
 		gamename = "sd:/<<<Start NDS Path                                                                                                                                                                                                                            End NDS Path>>>";
 		savename = ReplaceAll(gamename, ".nds", ".sav");
 		
 		if (access(savename.c_str(), F_OK)) {
-			consoleDemoInit();
-			iprintf ("Creating save file...\n");
+			FILE *f_nds_file = fopen(gamename.c_str(), "rb");
 
-			static const int BUFFER_SIZE = 4096;
-			char buffer[BUFFER_SIZE];
-			memset(buffer, 0, sizeof(buffer));
+			char game_TID[5];
+			fseek(f_nds_file, offsetof(sNDSHeadertitlecodeonly, gameCode), SEEK_SET);
+			fread(game_TID, 1, 4, f_nds_file);
+			game_TID[4] = 0;
+			fclose(f_nds_file);
 
-			int savesize = 524288;	// 512KB (default size for most games)
+			if (strcmp(game_TID, "####") != 0) {	// Create save if game isn't homebrew
+				consoleDemoInit();
+				iprintf ("Creating save file...\n");
 
-			FILE *pFile = fopen(savename.c_str(), "wb");
-			if (pFile) {
-				for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
-					fwrite(buffer, 1, sizeof(buffer), pFile);
+				static const int BUFFER_SIZE = 4096;
+				char buffer[BUFFER_SIZE];
+				memset(buffer, 0, sizeof(buffer));
+
+				int savesize = 524288;	// 512KB (default size for most games)
+
+				// Set save size to 1MB for the following games
+				if (strcmp(game_TID, "AZLJ") == 0 ||	// Wagamama Fashion: Girls Mode
+					strcmp(game_TID, "AZLE") == 0 ||	// Style Savvy
+					strcmp(game_TID, "AZLP") == 0 ||	// Nintendo presents: Style Boutique
+					strcmp(game_TID, "AZLK") == 0 )	// Namanui Collection: Girls Style
+				{
+					savesize = 1048576;
 				}
-				fclose(pFile);
+
+				// Set save size to 32MB for the following games
+				if (strcmp(game_TID, "UORE") == 0 ||	// WarioWare - D.I.Y.
+					strcmp(game_TID, "UORP") == 0 )	// WarioWare - Do It Yourself
+				{
+					savesize = 1048576*32;
+				}
+
+				FILE *pFile = fopen(savename.c_str(), "wb");
+				if (pFile) {
+					for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
+						fwrite(buffer, 1, sizeof(buffer), pFile);
+					}
+					fclose(pFile);
+				}
+				iprintf ("Done!\n");
 			}
-			iprintf ("Done!\n");
 
 		}
 
-				CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
-				std::string path = gamename;
-				std::string savepath = savename;
-				path = ReplaceAll( path, "sd:/", "fat:/");
-				savepath = ReplaceAll( savepath, "sd:/", "fat:/");
-				bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", path);
-				bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
-				bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
-				filename = bootstrapini.GetString("NDS-BOOTSTRAP", "BOOTSTRAP_PATH","");
-				filename = ReplaceAll( filename, "fat:/", "sd:/");
-				runFile(filename);
-				
-				consoleDemoInit();
-				iprintf ("Bootstrap not found.\n");
-				iprintf ("Running without patches.\n");
-				doPause();
-			
-				runFile (gamename);
-				iprintf ("ROM not found.\n");
+		CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
+		bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", gamename);
+		bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savename);
+		scanKeys();
+		if (keysHeld() & KEY_Y) bootstrapini.SetString("NDS-BOOTSTRAP", "ARM7_DONOR_PATH", gamename);
+		bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
+		filename = bootstrapini.GetString("NDS-BOOTSTRAP", "BOOTSTRAP_PATH","");
+		runFile(filename);
+		
+		consoleDemoInit();
+		iprintf ("Bootstrap not found.\n");
+		iprintf ("Running without patches.\n");
+		iprintf ("\n");
+		iprintf ("If this is a retail ROM,\n");
+		iprintf ("it will not run.\n");
+		iprintf ("\n");
+		doPause();
+		
+		runFile (gamename);
+		iprintf ("ROM not found.\n");
 
 		while (1) {
 			swiWaitForVBlank();

@@ -58,6 +58,8 @@ dldiOffset:
 	.word	_dldi_start - _start
 dsiSD:
 	.word	0
+dsiMode:
+	.word	0
 */
 
 #define STORED_FILE_CLUSTER_OFFSET 4 
@@ -148,7 +150,8 @@ static addr_t quickFind (const data_t* data, const data_t* search, size_t dataLe
 	return -1;
 }
 
-static const data_t dldiMagicString[] = "\xED\xA5\x8D\xBF Chishm";	// Normal DLDI file
+// Normal DLDI uses "\xED\xA5\x8D\xBF Chishm"
+// Bootloader string is different to avoid being patched
 static const data_t dldiMagicLoaderString[] = "\xEE\xA5\x8D\xBF Chishm";	// Different to a normal DLDI file
 
 #define DEVICE_TYPE_DLDI 0x49444C44

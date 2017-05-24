@@ -55,16 +55,6 @@ int main() {
 //---------------------------------------------------------------------------------
     nocashMessage("ARM7 main.c main");
 	
-	REG_SCFG_ROM = 0x703;
-	REG_SCFG_CLK = 0x0187;
-	// REG_SCFG_EXT = 0x93A40000;
-
-	// SCFG_CLK
-	// 0x0180 : NTR
-	// 0x0181 : NTR+SD
-	// 0x0187 : TWL
-	// REG_SCFG_CLK = 0x0181;
-	
 	// clear sound registers
 	dmaFillWords(0, (void*)0x04000400, 0x100);
 
@@ -88,17 +78,8 @@ int main() {
 	installSoundFIFO();
 	installSystemFIFO();
 
-	fifoWaitValue32(FIFO_USER_01);
-	if(fifoCheckValue32(FIFO_USER_02)) { dsi_resetSlot1(); }
-	fifoSendValue32(FIFO_USER_03, 1);
-
 	fifoWaitValue32(FIFO_USER_07);
 	if(fifoCheckValue32(FIFO_USER_04)) { REG_SCFG_CLK = 0x0181; }
-	if(fifoCheckValue32(FIFO_USER_05)) {
-		REG_SCFG_EXT = 0x13A40000;
-	} else {
-		if(fifoCheckValue32(FIFO_USER_06)) { REG_SCFG_EXT = 0x93FFFB06; } else { REG_SCFG_EXT = 0x93A40000; }
-	}
 
 	irqSet(IRQ_VCOUNT, VcountHandler);
 	irqSet(IRQ_VBLANK, VblankHandler);
