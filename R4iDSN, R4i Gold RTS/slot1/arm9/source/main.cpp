@@ -30,14 +30,28 @@
 
 #include "inifile.h"
 
+//---------------------------------------------------------------------------------
+void dopause() {
+//---------------------------------------------------------------------------------
+	iprintf("Press start...\n");
+	while(1) {
+		scanKeys();
+		if(keysDown() & KEY_START)
+			break;
+		swiWaitForVBlank();
+	}
+	scanKeys();
+}
+
 int main( int argc, char **argv) {
 
 	consoleDemoInit();
 	
 	if (fatInitDefault()){
 		printf("r4idsn.nds started.\n");
+		// dopause();
 	
-		if( access( "sd:/_nds/lastsave.ini", F_OK ) != -1 ) {
+		// if( access( "sd:/_nds/lastsave.ini", F_OK ) != -1 ) {
 			FILE * inifilesd, * inifileslot1;
 			int numr,numw;
 			struct VariablesToRead {
@@ -90,13 +104,15 @@ int main( int argc, char **argv) {
 			}
 			chdir("fat:/");
 			printf("Starting Wfwd.nds\n");
+			// dopause();
 			runNdsFile("fat:/Wfwd.nds", 0, NULL);
 
-		} else {
-			chdir("fat:/");
-			printf("Starting _DSMENU.DAT\n");
-			runNdsFile("fat:/_DSMENU.DAT", 0, NULL);
-		}
+		// } else {
+		// 	chdir("fat:/");
+		// 	printf("Starting _DS_MENU.DAT\n");
+		// 	dopause();
+		//	runNdsFile("fat:/_DS_MENU.DAT", 0, NULL);
+		// }
 	} else {
 		consoleDemoInit();
 		printf("FAT init failed!\n");
