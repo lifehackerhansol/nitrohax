@@ -30,10 +30,22 @@
 #include <nds.h>
 #include <maxmod7.h>
 
+bool soundFreqSet = false;
+
+//---------------------------------------------------------------------------------
+void ReturntoDSiMenu() {
+//---------------------------------------------------------------------------------
+	// This will skip the power-off/sleep mode screen when returning to HOME Menu
+	i2cWriteRegister(0x4A, 0x70, 0x01);		// Bootflag = Warmboot/SkipHealthSafety
+	i2cWriteRegister(0x4A, 0x11, 0x01);		// Reset to DSi/3DS HOME Menu
+}
+
 //---------------------------------------------------------------------------------
 void VblankHandler(void) {
 //---------------------------------------------------------------------------------
-
+	if(fifoCheckValue32(FIFO_USER_01)) {
+		ReturntoDSiMenu();
+	}
 }
 
 //---------------------------------------------------------------------------------
@@ -78,9 +90,6 @@ int main() {
 	installSoundFIFO();
 	installSystemFIFO();
 
-	fifoWaitValue32(FIFO_USER_07);
-	if(fifoCheckValue32(FIFO_USER_04)) { REG_SCFG_CLK = 0x0181; }
-
 	irqSet(IRQ_VCOUNT, VcountHandler);
 	irqSet(IRQ_VBLANK, VblankHandler);
 
@@ -90,11 +99,14 @@ int main() {
 	
 	// Keep the ARM7 mostly idle
 	while (!exitflag) {
-		if ( 0 == (REG_KEYINPUT & (KEY_SELECT | KEY_START | KEY_L | KEY_R))) {
-			exitflag = true;
-		}
-		// fifocheck();
 		swiWaitForVBlank();
+		
+		if(fifoCheckValue32(FIFO_USER_08)) {
+			if(!soundFreqSet) {
+				*(u16*)(0x4004700) |= BIT(13);
+				soundFreqSet = true;
+			}
+		}
 	}
 	return 0;
 }

@@ -68,6 +68,7 @@ dsiMode:
 #define ARG_START_OFFSET 16
 #define ARG_SIZE_OFFSET 20
 #define HAVE_DSISD_OFFSET 28
+#define DSIMODE_OFFSET 32
 
 
 typedef signed int addr_t;
@@ -286,6 +287,7 @@ int runNds (const void* loader, u32 loaderSize, u32 cluster, bool initDisc, bool
 	// INIT_DISC = initDisc;
 	writeAddr ((data_t*) LCDC_BANK_C, INIT_DISC_OFFSET, initDisc);
 
+	writeAddr ((data_t*) LCDC_BANK_C, DSIMODE_OFFSET, isDSiMode());
 	if(argv[0][0]=='s' && argv[0][1]=='d') {
 		dldiPatchNds = false;
 		writeAddr ((data_t*) LCDC_BANK_C, HAVE_DSISD_OFFSET, 1);
@@ -346,7 +348,7 @@ int runNds (const void* loader, u32 loaderSize, u32 cluster, bool initDisc, bool
 	*((vu32*)0x02FFFE24) = (u32)0x02FFFE04;
 
 	resetARM7(0x06000000);
-
+  
 	swiSoftReset(); 
 	return true;
 }
@@ -401,27 +403,29 @@ dldiOffset:
 dsiSD:
 	.word	0
 */
+
 bool installBootStub(bool havedsiSD) {
 #ifndef _NO_BOOTSTUB_
 	extern char *fake_heap_end;
-	struct __bootstub *bootcode = (struct __bootstub *)fake_heap_end;
+	struct __bootstub *bootstub = (struct __bootstub *)fake_heap_end;
+	u32 *bootloader = (u32*)(fake_heap_end+bootstub_bin_size);
 
-	memcpy(fake_heap_end,bootstub_bin,bootstub_bin_size);
-	memcpy(fake_heap_end+bootstub_bin_size,load_bin,load_bin_size);
+	memcpy(bootstub,bootstub_bin,bootstub_bin_size);
+	memcpy(bootloader,load_bin,load_bin_size);
 	bool ret = false;
 
+	bootloader[8] = isDSiMode();
 	if( havedsiSD) {
 		ret = true;
-		u32 *bootcode = (u32*)(fake_heap_end+bootstub_bin_size);
-		bootcode[3] = 0; // don't dldi patch
-		bootcode[7] = 1; // use internal dsi SD code
+		bootloader[3] = 0; // don't dldi patch
+		bootloader[7] = 1; // use internal dsi SD code
 	} else {
-		ret = dldiPatchLoader((data_t*)(fake_heap_end+bootstub_bin_size), load_bin_size,false);
+		ret = dldiPatchLoader((data_t*)bootloader, load_bin_size,false);
 	}
-	bootcode->arm9reboot = (VoidFn)(((u32)bootcode->arm9reboot)+fake_heap_end); 
-	bootcode->arm7reboot = (VoidFn)(((u32)bootcode->arm7reboot)+fake_heap_end); 
-	bootcode->bootsize = load_bin_size;
-	
+	bootstub->arm9reboot = (VoidFn)(((u32)bootstub->arm9reboot)+fake_heap_end);
+	bootstub->arm7reboot = (VoidFn)(((u32)bootstub->arm7reboot)+fake_heap_end);
+	bootstub->bootsize = load_bin_size;
+
 	DC_FlushAll();
 
 	return ret;

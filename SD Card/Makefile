@@ -115,9 +115,9 @@ endif
 
 export GAME_TITLE := $(TARGET)
 
-.PHONY: bootloader bootstub BootStrap clean
+.PHONY: bootloader bootstub clean arm7/$(TARGET).elf arm9/$(TARGET).elf
 
-all:	bootloader bootstub BootStrap $(TARGET).nds
+all:	bootloader bootstub $(TARGET).nds
 
 dist:	all
 	@rm	-fr	hbmenu
@@ -127,7 +127,8 @@ dist:	all
 	@tar -cvjf hbmenu-$(VERSION).tar.bz2 hbmenu testfiles README.md COPYING -X exclude.lst
 	
 $(TARGET).nds:	$(TARGET).arm7 $(TARGET).arm9
-	ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf -b icon.bmp "NDS HB MENU;Runs in TWL_FIRM MOD or DSI mode;made by devkitpro"
+	ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf
+	python patch_ndsheader_dsiware.py $(CURDIR)/$(TARGET).nds
 
 $(TARGET).arm7: arm7/$(TARGET).elf
 	cp arm7/$(TARGET).elf $(TARGET).arm7.elf
@@ -154,7 +155,6 @@ clean:
 	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).arm9 data
 	@$(MAKE) -C bootloader clean
 	@$(MAKE) -C bootstub clean
-	@$(MAKE) -C BootStrap clean
 	$(MAKE) -C arm9 clean
 	$(MAKE) -C arm7 clean
 
@@ -166,9 +166,6 @@ bootloader: data
 
 bootstub: data
 	@$(MAKE) -C bootstub
-
-BootStrap:
-	@$(MAKE) -C BootStrap
 
 #---------------------------------------------------------------------------------
 else
