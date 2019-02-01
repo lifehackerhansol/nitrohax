@@ -48,6 +48,17 @@ int mpusize = 0;
 bool bootstrapFile = false;
 
 /**
+ * Remove trailing slashes from a pathname, if present.
+ * @param path Pathname to modify.
+ */
+void RemoveTrailingSlashes(std::string& path)
+{
+	while (!path.empty() && path[path.size()-1] == '/') {
+		path.resize(path.size()-1);
+	}
+}
+
+/**
  * Set donor SDK version for a specific game.
  */
 void SetDonorSDK(const char* filename) {
@@ -311,10 +322,6 @@ int main(int argc, char **argv) {
 
 	defaultExceptionHandler();
 
-	std::string filename;
-	std::string gamename;
-	std::string savename;
-
 	scanKeys();
 	int pressed = keysDown();
 
@@ -332,8 +339,24 @@ int main(int argc, char **argv) {
 		if(SOUND_FREQ) {
 			fifoSendValue32(FIFO_USER_08, 1);
 		}
-		
-		gamename = "sd:/<<<Start NDS Path                                                                                                                                                                                                                            End NDS Path>>>";
+
+		vector<char*> argarray;
+
+		std::string gamename = "sd:/<<<Start NDS Path                                                                                                                                                                                                                            End NDS Path>>>";
+
+		std::string romfolder = gamename;
+		while (!romfolder.empty() && romfolder[romfolder.size()-1] != '/') {
+			romfolder.resize(romfolder.size()-1);
+		}
+		chdir(romfolder.c_str());
+		mkdir ("saves", 0777);
+
+		std::string filename = gamename;
+		const size_t last_slash_idx = filename.find_last_of("/");
+		if (std::string::npos != last_slash_idx)
+		{
+			filename.erase(0, last_slash_idx + 1);
+		}
 
 		FILE *f_nds_file = fopen(gamename.c_str(), "rb");
 
@@ -343,9 +366,12 @@ int main(int argc, char **argv) {
 		game_TID[3] = 0;
 		fclose(f_nds_file);
 
-		savename = ReplaceAll(gamename, ".nds", ".sav");
+		std::string savename = ReplaceAll(filename, ".nds", ".sav");
+		std::string romFolderNoSlash = romfolder;
+		RemoveTrailingSlashes(romFolderNoSlash);
+		std::string savepath = romFolderNoSlash+"/saves/"+savename;
 
-		if (access(savename.c_str(), F_OK)) {
+		if (access(savepath.c_str(), F_OK)) {
 			if (strcmp(game_TID, "###") != 0) {	// Create save if game isn't homebrew
 				consoleDemoInit();
 				iprintf ("Creating save file...\n");
@@ -381,7 +407,7 @@ int main(int argc, char **argv) {
 					savesize = 1048576*32;
 				}
 
-				FILE *pFile = fopen(savename.c_str(), "wb");
+				FILE *pFile = fopen(savepath.c_str(), "wb");
 				if (pFile) {
 					for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
 						fwrite(buffer, 1, sizeof(buffer), pFile);
@@ -399,7 +425,8 @@ int main(int argc, char **argv) {
 
 		CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
 		bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", gamename);
-		bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savename);
+		bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
+		bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
 		bootstrapini.SetInt( "NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
 		bootstrapini.SetInt( "NDS-BOOTSTRAP", "GAME_SOFT_RESET", gameSoftReset);
 		bootstrapini.SetInt( "NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
@@ -412,9 +439,8 @@ int main(int argc, char **argv) {
 
 		if (strcmp(game_TID, "###") == 0) {
 			if (!(held & KEY_A)) {
-				int err = 0;
-				if (bootstrapFile) err = runNdsFile ("sd:/_nds/nds-bootstrap-hb-nightly.nds", 0, NULL);
-				else err = runNdsFile ("sd:/_nds/nds-bootstrap-hb-release.nds", 0, NULL);
+				argarray.push_back((char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-hb-nightly.nds" : "sd:/_nds/nds-bootstrap-hb-release.nds"));
+				int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 				if (!consoleInited) {
 					consoleDemoInit();
 					consoleInited = true;
@@ -422,9 +448,8 @@ int main(int argc, char **argv) {
 				if (err == 1) iprintf ("hb-bootstrap not found.\n");
 			}
 		} else {
-			if (bootstrapFile) filename = "sd:/_nds/nds-bootstrap-nightly.nds";
-			else filename = "sd:/_nds/nds-bootstrap-release.nds";
-			int err = runNdsFile (filename.c_str(), 0, NULL);
+			argarray.push_back((char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-nightly.nds" : "sd:/_nds/nds-bootstrap-release.nds"));
+			int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 			if (!consoleInited) {
 				consoleDemoInit();
 				consoleInited = true;
@@ -441,7 +466,8 @@ int main(int argc, char **argv) {
 		iprintf ("\n");
 		doPause();
 
-		int err = runNdsFile (gamename.c_str(), 0, NULL);
+		argarray.at(0) = (char*)(gamename.c_str());
+		int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 		consoleClear();
 		iprintf("Start failed. Error %i\n", err);
 		if (err == 1) iprintf ("ROM not found.\n");
