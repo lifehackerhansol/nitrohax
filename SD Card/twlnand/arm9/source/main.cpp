@@ -61,6 +61,10 @@ void doPause() {
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
 	if (fatInitDefault()) {
+		FILE* headerFile = fopen("sd:/_nds/ntr-forwarder/header.bin", "wb");
+		fwrite(__DSiHeader, 1, 0x1000, headerFile);
+		fclose(headerFile);
+
 		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
 
 		std::string ndsPath = "sd:/<<<Start NDS Path                                                                                                                                                                                                                            End NDS Path>>>";
