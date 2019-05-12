@@ -30,8 +30,6 @@
 #include <nds.h>
 #include <maxmod7.h>
 
-bool soundFreqSet = false;
-
 //---------------------------------------------------------------------------------
 void ReturntoDSiMenu() {
 //---------------------------------------------------------------------------------
@@ -43,9 +41,6 @@ void ReturntoDSiMenu() {
 //---------------------------------------------------------------------------------
 void VblankHandler(void) {
 //---------------------------------------------------------------------------------
-	if(fifoCheckValue32(FIFO_USER_01)) {
-		ReturntoDSiMenu();
-	}
 }
 
 //---------------------------------------------------------------------------------
@@ -83,30 +78,23 @@ int main() {
 	
 	fifoInit();
 	
-	mmInstall(FIFO_MAXMOD);
-	
 	SetYtrigger(80);
 	
-	installSoundFIFO();
 	installSystemFIFO();
 
 	irqSet(IRQ_VCOUNT, VcountHandler);
 	irqSet(IRQ_VBLANK, VblankHandler);
 
-	irqEnable( IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK);
+	irqEnable( IRQ_VBLANK | IRQ_VCOUNT );
 
 	setPowerButtonCB(powerButtonCB);
 	
 	// Keep the ARM7 mostly idle
 	while (!exitflag) {
-		swiWaitForVBlank();
-		
-		if(fifoCheckValue32(FIFO_USER_08)) {
-			if(!soundFreqSet) {
-				*(u16*)(0x4004700) |= BIT(13);
-				soundFreqSet = true;
-			}
+		if(fifoCheckValue32(FIFO_USER_01)) {
+			ReturntoDSiMenu();
 		}
+		swiWaitForVBlank();
 	}
 	return 0;
 }

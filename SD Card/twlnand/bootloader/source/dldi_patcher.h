@@ -1,7 +1,6 @@
- Copyright (C) 2005 - 2013
- 	Michael "Chishm" Chisholm
-	Dave "WinterMute" Murphy
-	Claudio "sverx"
+/*-----------------------------------------------------------------
+
+ Copyright (C) 2005  Michael "Chishm" Chisholm
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -15,4 +14,19 @@
 
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, US
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+ If you use this code, please give due credit and email me about your
+ project at chishm@hotmail.com
+------------------------------------------------------------------*/
+
+#ifndef DLDI_PATCHER_H
+#define DLDI_PATCHER_H
+
+#include <nds/ndstypes.h>
+
+typedef signed int addr_t;
+typedef unsigned char data_t;
+bool dldiPatchBinary (data_t *binData, u32 binSize);
+
+#endif // DLDI_PATCHER_H

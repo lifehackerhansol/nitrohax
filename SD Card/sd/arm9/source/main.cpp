@@ -35,6 +35,7 @@
 
 #include "bootsplash.h"
 #include "inifile.h"
+#include "fileCopy.h"
 
 using namespace std;
 
@@ -44,6 +45,7 @@ bool gameSoftReset = false;
 
 int mpuregion = 0;
 int mpusize = 0;
+bool ceCached = true;
 
 bool bootstrapFile = false;
 
@@ -121,7 +123,7 @@ void SetDonorSDK(const char* filename) {
 	};
 
 	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sdk2_list)/sizeof(sdk2_list[0]); i++) {
+	for (unsigned int i = 0; i < sizeof(sdk2_list) / sizeof(sdk2_list[0]); i++) {
 		if (!memcmp(game_TID, sdk2_list[i], 3)) {
 			// Found a match.
 			donorSdkVer = 2;
@@ -130,7 +132,7 @@ void SetDonorSDK(const char* filename) {
 	}
 	
 	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sdk3_list)/sizeof(sdk3_list[0]); i++) {
+	for (unsigned int i = 0; i < sizeof(sdk3_list) / sizeof(sdk3_list[0]); i++) {
 		if (!memcmp(game_TID, sdk3_list[i], 3)) {
 			// Found a match.
 			donorSdkVer = 3;
@@ -139,7 +141,7 @@ void SetDonorSDK(const char* filename) {
 	}
 
 	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sdk4_list)/sizeof(sdk4_list[0]); i++) {
+	for (unsigned int i = 0; i < sizeof(sdk4_list) / sizeof(sdk4_list[0]); i++) {
 		if (!memcmp(game_TID, sdk4_list[i], 3)) {
 			// Found a match.
 			donorSdkVer = 4;
@@ -147,12 +149,16 @@ void SetDonorSDK(const char* filename) {
 		}
 	}
 
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sdk5_list)/sizeof(sdk5_list[0]); i++) {
-		if (!memcmp(game_TID, sdk5_list[i], 3)) {
-			// Found a match.
-			donorSdkVer = 5;
-			break;
+	if (strncmp(game_TID, "V", 1) == 0) {
+		donorSdkVer = 5;
+	} else {
+		// TODO: If the list gets large enough, switch to bsearch().
+		for (unsigned int i = 0; i < sizeof(sdk5_list) / sizeof(sdk5_list[0]); i++) {
+			if (!memcmp(game_TID, sdk5_list[i], 3)) {
+				// Found a match.
+				donorSdkVer = 5;
+				break;
+			}
 		}
 	}
 }
@@ -161,6 +167,12 @@ void SetDonorSDK(const char* filename) {
  * Disable soft-reset, in favor of non OS_Reset one, for a specific game.
  */
 void SetGameSoftReset(const char* filename) {
+	scanKeys();
+	if(keysHeld() & KEY_R){
+		gameSoftReset = true;
+		return;
+	}
+
 	FILE *f_nds_file = fopen(filename, "rb");
 
 	char game_TID[5];
@@ -170,9 +182,6 @@ void SetGameSoftReset(const char* filename) {
 	game_TID[3] = 0;
 	fclose(f_nds_file);
 
-	scanKeys();
-	int pressed = keysDownRepeat();
-	
 	gameSoftReset = false;
 
 	// Check for games that have it's own reset function (OS_Reset not used).
@@ -191,15 +200,11 @@ void SetGameSoftReset(const char* filename) {
 
 	// TODO: If the list gets large enough, switch to bsearch().
 	for (unsigned int i = 0; i < sizeof(list)/sizeof(list[0]); i++) {
-		if (!memcmp(game_TID, list[i], 3)) {
+		if (memcmp(game_TID, list[i], 3) == 0) {
 			// Found a match.
 			gameSoftReset = true;
 			break;
 		}
-	}
-
-	if(pressed & KEY_R){
-		gameSoftReset = true;
 	}
 }
 
@@ -217,7 +222,7 @@ void SetMPUSettings(const char* filename) {
 	fclose(f_nds_file);
 
 	scanKeys();
-	int pressed = keysDownRepeat();
+	int pressed = keysHeld();
 	
 	if(pressed & KEY_B){
 		mpuregion = 1;
@@ -266,10 +271,84 @@ void SetMPUSettings(const char* filename) {
 
 	// TODO: If the list gets large enough, switch to bsearch().
 	for (unsigned int i = 0; i < sizeof(mpu_3MB_list)/sizeof(mpu_3MB_list[0]); i++) {
-		if (!memcmp(game_TID, mpu_3MB_list[i], 3)) {
+		if (memcmp(game_TID, mpu_3MB_list[i], 3) == 0) {
 			// Found a match.
 			mpuregion = 1;
 			mpusize = 3145728;
+			break;
+		}
+	}
+}
+
+/**
+ * Exclude moving nds-bootstrap's cardEngine_arm9 to cached memory region for some games.
+ */
+void SetSpeedBumpExclude(const char *filename) {
+	scanKeys();
+	if(keysHeld() & KEY_L){
+		ceCached = false;
+		return;
+	}
+
+	ceCached = true;
+
+	FILE *f_nds_file = fopen(filename, "rb");
+
+	char game_TID[5];
+	fseek(f_nds_file, offsetof(sNDSHeadertitlecodeonly, gameCode), SEEK_SET);
+	fread(game_TID, 1, 4, f_nds_file);
+	fclose(f_nds_file);
+
+	static const char list[][5] = {
+		"AWRP",	// Advance Wars: Dual Strike (EUR)
+		"AVCP",	// Magical Starsign (EUR)
+		"YFTP",	// Pokemon Mystery Dungeon: Explorers of Time (EUR)
+		"YFYP",	// Pokemon Mystery Dungeon: Explorers of Darkness (EUR)
+	};
+
+	// TODO: If the list gets large enough, switch to bsearch().
+	for (unsigned int i = 0; i < sizeof(list)/sizeof(list[0]); i++) {
+		if (memcmp(game_TID, list[i], 4) == 0) {
+			// Found a match.
+			ceCached = false;
+			break;
+		}
+	}
+
+	static const char list2[][4] = {
+		"AEK",	// Age of Empires: The Age of Kings
+		"ALC",	// Animaniacs: Lights, Camera, Action!
+		"YAH",	// Assassin's Creed: Altair's Chronicles
+		//"ACV",	// Castlevania: Dawn of Sorrow	(fixed on nds-bootstrap side)
+		"A5P",	// Harry Potter and the Order of the Phoenix
+		"AR2",	// Kirarin * Revolution: Naasan to Issho
+		"ARM",	// Mario & Luigi: Partners in Time
+		"CLJ",	// Mario & Luigi: Bowser's Inside Story
+		"COL",	// Mario & Sonic at the Olympic Winter Games
+		"AMQ",	// Mario vs. Donkey Kong 2: March of the Minis
+		"B2K",	// Ni no Kuni: Shikkoku no Madoushi
+		"C2S",	// Pokemon Mystery Dungeon: Explorers of Sky
+		"Y6S",	// Pokemon Mystery Dungeon: Explorers of Sky (Demo)
+		"B3R",	// Pokemon Ranger: Guardian Signs
+		"APU",	// Puyo Puyo!! 15th Anniversary
+		"BYO",	// Puyo Puyo 7
+		"YZX",	// Rockman ZX Advent/MegaMan ZX Advent
+	    "B6X", // Rockman EXE: Operate Shooting Star
+	    "B6Z", // Rockman Zero Collection/MegaMan Zero Collection
+		"ARF", // Rune Factory: A Fantasy Harvest Moon
+		"AN6", // Rune Factory 2: A Fantasy Harvest Moon
+		"AS2", // Spider-Man 2
+		"AQ3", // Spider-Man 3
+		"CS7", // Summon Night X: Tears Crown
+		"AYT", // Tales of Innocence
+		"YYK", // Trauma Center: Under the Knife 2
+	};
+
+	// TODO: If the list gets large enough, switch to bsearch().
+	for (unsigned int i = 0; i < sizeof(list2)/sizeof(list2[0]); i++) {
+		if (memcmp(game_TID, list2[i], 3) == 0) {
+			// Found a match.
+			ceCached = false;
 			break;
 		}
 	}
@@ -323,7 +402,7 @@ int main(int argc, char **argv) {
 	defaultExceptionHandler();
 
 	scanKeys();
-	int pressed = keysDown();
+	int pressed = keysHeld();
 
 	if (fatInitDefault()) {
 		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
@@ -342,23 +421,23 @@ int main(int argc, char **argv) {
 
 		vector<char*> argarray;
 
-		std::string gamename = "sd:/<<<Start NDS Path                                                                                                                                                                                                                            End NDS Path>>>";
+		std::string ndsPath = ntrforwarderini.GetString("NTR-FORWARDER", "NDS_PATH", "");
 
-		std::string romfolder = gamename;
+		std::string romfolder = ndsPath;
 		while (!romfolder.empty() && romfolder[romfolder.size()-1] != '/') {
 			romfolder.resize(romfolder.size()-1);
 		}
 		chdir(romfolder.c_str());
 		mkdir ("saves", 0777);
 
-		std::string filename = gamename;
+		std::string filename = ndsPath;
 		const size_t last_slash_idx = filename.find_last_of("/");
 		if (std::string::npos != last_slash_idx)
 		{
 			filename.erase(0, last_slash_idx + 1);
 		}
 
-		FILE *f_nds_file = fopen(gamename.c_str(), "rb");
+		FILE *f_nds_file = fopen(ndsPath.c_str(), "rb");
 
 		char game_TID[5];
 		grabTID(f_nds_file, game_TID);
@@ -371,67 +450,66 @@ int main(int argc, char **argv) {
 		RemoveTrailingSlashes(romFolderNoSlash);
 		std::string savepath = romFolderNoSlash+"/saves/"+savename;
 
-		if (access(savepath.c_str(), F_OK)) {
-			if (strcmp(game_TID, "###") != 0) {	// Create save if game isn't homebrew
-				consoleDemoInit();
-				iprintf ("Creating save file...\n");
+		if (getFileSize(savepath.c_str()) == 0 && strcmp(game_TID, "###") != 0) {
+			consoleDemoInit();
+			iprintf ("Creating save file...\n");
 
-				static const int BUFFER_SIZE = 4096;
-				char buffer[BUFFER_SIZE];
-				memset(buffer, 0, sizeof(buffer));
+			static const int BUFFER_SIZE = 4096;
+			char buffer[BUFFER_SIZE];
+			memset(buffer, 0, sizeof(buffer));
 
-				int savesize = 524288;	// 512KB (default size for most games)
+			int savesize = 524288;	// 512KB (default size for most games)
 
-				// Set save size to 8KB for the following games
-				if (strcmp(game_TID, "ASC") == 0 )	// Sonic Rush
-				{
-					savesize = 8192;
-				}
-
-				// Set save size to 256KB for the following games
-				if (strcmp(game_TID, "AMH") == 0 )	// Metroid Prime Hunters
-				{
-					savesize = 262144;
-				}
-
-				// Set save size to 1MB for the following games
-				if ( strcmp(game_TID, "AZL") == 0		// Wagamama Fashion: Girls Mode/Style Savvy/Nintendo presents: Style Boutique/Namanui Collection: Girls Style
-					|| strcmp(game_TID, "BKI") == 0 )	// The Legend of Zelda: Spirit Tracks
-				{
-					savesize = 1048576;
-				}
-
-				// Set save size to 32MB for the following games
-				if (strcmp(game_TID, "UOR") == 0 )	// WarioWare - D.I.Y. (Do It Yourself)
-				{
-					savesize = 1048576*32;
-				}
-
-				FILE *pFile = fopen(savepath.c_str(), "wb");
-				if (pFile) {
-					for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
-						fwrite(buffer, 1, sizeof(buffer), pFile);
-					}
-					fclose(pFile);
-				}
-				iprintf ("Done!\n");
+			// Set save size to 8KB for the following games
+			if (strcmp(game_TID, "ASC") == 0 )	// Sonic Rush
+			{
+				savesize = 8192;
 			}
 
+			// Set save size to 256KB for the following games
+			if (strcmp(game_TID, "AMH") == 0 )	// Metroid Prime Hunters
+			{
+				savesize = 262144;
+			}
+
+			// Set save size to 1MB for the following games
+			if ( strcmp(game_TID, "AZL") == 0		// Wagamama Fashion: Girls Mode/Style Savvy/Nintendo presents: Style Boutique/Namanui Collection: Girls Style
+				|| strcmp(game_TID, "BKI") == 0 )	// The Legend of Zelda: Spirit Tracks
+			{
+				savesize = 1048576;
+			}
+
+			// Set save size to 32MB for the following games
+			if (strcmp(game_TID, "UOR") == 0 )	// WarioWare - D.I.Y. (Do It Yourself)
+			{
+				savesize = 1048576*32;
+			}
+
+			FILE *pFile = fopen(savepath.c_str(), "wb");
+			if (pFile) {
+				for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
+					fwrite(buffer, 1, sizeof(buffer), pFile);
+				}
+				fclose(pFile);
+			}
+			iprintf ("Done!\n");
 		}
 
-		SetDonorSDK(gamename.c_str());
-		SetGameSoftReset(gamename.c_str());
-		SetMPUSettings(gamename.c_str());
+		SetDonorSDK(ndsPath.c_str());
+		SetGameSoftReset(ndsPath.c_str());
+		SetMPUSettings(ndsPath.c_str());
+		SetSpeedBumpExclude(ndsPath.c_str());
 
 		CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
-		bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", gamename);
+		bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
 		bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
 		bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
-		bootstrapini.SetInt( "NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
-		bootstrapini.SetInt( "NDS-BOOTSTRAP", "GAME_SOFT_RESET", gameSoftReset);
-		bootstrapini.SetInt( "NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
-		bootstrapini.SetInt( "NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
-		bootstrapini.SetInt( "NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
+		bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
+		bootstrapini.SetInt("NDS-BOOTSTRAP", "GAME_SOFT_RESET", gameSoftReset);
+		bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
+		bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
+		bootstrapini.SetInt("NDS-BOOTSTRAP", "CARDENGINE_CACHED", ceCached);
+		bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
 		bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
 
 		scanKeys();
@@ -466,14 +544,14 @@ int main(int argc, char **argv) {
 		iprintf ("\n");
 		doPause();
 
-		argarray.at(0) = (char*)(gamename.c_str());
+		argarray.at(0) = (char*)(ndsPath.c_str());
 		int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 		consoleClear();
 		iprintf("Start failed. Error %i\n", err);
 		if (err == 1) iprintf ("ROM not found.\n");
 	} else {
 		BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language);
-		
+
 		// Subscreen as a console
 		videoSetModeSub(MODE_0_2D);
 		vramSetBankH(VRAM_H_SUB_BG);
@@ -489,6 +567,7 @@ int main(int argc, char **argv) {
 	while (1) {
 		scanKeys();
 		if (keysHeld() & KEY_B) fifoSendValue32(FIFO_USER_01, 1);	// Tell ARM7 to reboot into 3DS HOME Menu (power-off/sleep mode screen skipped)
+		swiWaitForVBlank();
 	}
 
 	return 0;

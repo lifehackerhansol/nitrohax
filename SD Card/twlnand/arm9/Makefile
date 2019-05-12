@@ -1,7 +1,6 @@
 #---------------------------------------------------------------------------------
 .SUFFIXES:
 #---------------------------------------------------------------------------------
-.SECONDARY:
 
 ifeq ($(strip $(DEVKITARM)),)
 $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
@@ -9,26 +8,18 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
-export HBMENU_MAJOR	:= 0
-export HBMENU_MINOR	:= 5
-export HBMENU_PATCH	:= 0
-
-
-VERSION	:=	$(HBMENU_MAJOR).$(HBMENU_MINOR).$(HBMENU_PATCH)
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
-# DATA is a list of directories containing binary files embedded using bin2o
-# GRAPHICS is a list of directories containing image files to be converted with grit
+# MAXMOD_SOUNDBANK contains a directory of music and sound effect files
 #---------------------------------------------------------------------------------
 TARGET		:=	hbmenu
 BUILD		:=	build
 SOURCES		:=	source
 INCLUDES	:=	include
-DATA		:=	data
-GRAPHICS	:=  gfx
+DATA		:=	../data
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -44,20 +35,20 @@ CFLAGS	+=	$(INCLUDE) -DARM9
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-specs=ds_arm9.specs -g -Wl,--gc-sections $(ARCH) -Wl,-Map,$(notdir $*.map)
+LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project (order is important)
 #---------------------------------------------------------------------------------
-LIBS	:= 	-lfat -lnds9
-
-
+LIBS	:=	-lfat -lnds9
+ 
+ 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
 LIBDIRS	:=	$(LIBNDS)
-
+ 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
 # rules for different file extensions
@@ -67,9 +58,10 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
+export AUDIOFILES	:=	$(foreach dir,$(notdir $(wildcard $(MUSIC)/*.*)),$(CURDIR)/$(MUSIC)/$(dir))
+
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(DATA),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(GRAPHICS),$(CURDIR)/$(dir))
+					$(foreach dir,$(DATA),$(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
@@ -77,8 +69,8 @@ CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 PNGFILES	:=	$(foreach dir,$(GRAPHICS),$(notdir $(wildcard $(dir)/*.png)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-BINFILES	:=	load.bin bootstub.bin
-
+BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+ 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
 #---------------------------------------------------------------------------------
@@ -94,94 +86,46 @@ endif
 #---------------------------------------------------------------------------------
 
 export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
-					$(PNGFILES:.png=.o) \
+					$(PNGFILES:.png=.o) $(BMPFILES:.bmp=.o) \
 					$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-iquote $(CURDIR)/$(dir)) \
-					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-					-I$(CURDIR)/$(BUILD)
-
+ 
+export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+			-I$(CURDIR)/$(BUILD)
+ 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-icons := $(wildcard *.bmp)
 
-ifneq (,$(findstring $(TARGET).bmp,$(icons)))
-	export GAME_ICON := $(CURDIR)/$(TARGET).bmp
-else
-	ifneq (,$(findstring icon.bmp,$(icons)))
-		export GAME_ICON := $(CURDIR)/icon.bmp
-	endif
-endif
+export OUTPUT	:=	$(CURDIR)/$(TARGET)
+ 
+.PHONY: $(BUILD) clean
 
-export GAME_TITLE := $(TARGET)
-
-.PHONY: bootloader bootstub clean arm7/$(TARGET).elf arm9/$(TARGET).elf
-
-all:	bootloader bootstub $(TARGET).nds
-
-dist:	all
-	@rm	-fr	hbmenu
-	@mkdir hbmenu
-	@cp hbmenu.nds hbmenu/BOOT.NDS
-	@cp BootStrap/_BOOT_MP.NDS BootStrap/TTMENU.DAT BootStrap/_DS_MENU.DAT BootStrap/ez5sys.bin BootStrap/akmenu4.nds hbmenu
-	@tar -cvjf hbmenu-$(VERSION).tar.bz2 hbmenu testfiles README.md COPYING -X exclude.lst
-	
-$(TARGET).nds:	$(TARGET).arm7 $(TARGET).arm9
-	ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf
-	python patch_ndsheader_dsiware.py $(CURDIR)/$(TARGET).nds
-
-$(TARGET).arm7: arm7/$(TARGET).elf
-	cp arm7/$(TARGET).elf $(TARGET).arm7.elf
-
-$(TARGET).arm9: arm9/$(TARGET).elf
-	cp arm9/$(TARGET).elf $(TARGET).arm9.elf
-
+all : $(BUILD)
+ 
 #---------------------------------------------------------------------------------
-arm7/$(TARGET).elf:
-	@$(MAKE) -C arm7
-	
-#---------------------------------------------------------------------------------
-arm9/$(TARGET).elf:
-	@$(MAKE) -C arm9
-
-#---------------------------------------------------------------------------------
-#$(BUILD):
-	#@[ -d $@ ] || mkdir -p $@
-	#@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-
+$(BUILD):
+	@[ -d $@ ] || mkdir -p $@
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+ 
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).arm9 data
-	@$(MAKE) -C bootloader clean
-	@$(MAKE) -C bootstub clean
-	$(MAKE) -C arm9 clean
-	$(MAKE) -C arm7 clean
-
-data:
-	@mkdir -p data
-
-bootloader: data
-	@$(MAKE) -C bootloader
-
-bootstub: data
-	@$(MAKE) -C bootstub
+	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds
 
 #---------------------------------------------------------------------------------
 else
-
+ 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-#$(OUTPUT).nds	: 	$(OUTPUT).elf
-#$(OUTPUT).elf	:	$(OFILES)
+$(OUTPUT).elf	:	$(OFILES)
 
 #---------------------------------------------------------------------------------
 %.bin.o	:	%.bin
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	$(bin2o)
-
+	
 #---------------------------------------------------------------------------------
 # This rule creates assembly source files using grit
 # grit takes an image file and a .grit describing how the file is to be processed
@@ -191,7 +135,7 @@ else
 %.s %.h   : %.png %.grit
 #---------------------------------------------------------------------------------
 	grit $< -fts -o$*
-
+ 
 -include $(DEPSDIR)/*.d
 
 #---------------------------------------------------------------------------------------
