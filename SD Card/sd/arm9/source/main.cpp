@@ -45,7 +45,7 @@ bool gameSoftReset = false;
 
 int mpuregion = 0;
 int mpusize = 0;
-bool ceCached = true;
+bool ceCached = false;
 
 bool bootstrapFile = false;
 
@@ -283,15 +283,7 @@ void SetMPUSettings(const char* filename) {
 /**
  * Exclude moving nds-bootstrap's cardEngine_arm9 to cached memory region for some games.
  */
-void SetSpeedBumpExclude(const char *filename) {
-	scanKeys();
-	if(keysHeld() & KEY_L){
-		ceCached = false;
-		return;
-	}
-
-	ceCached = true;
-
+void SetSpeedBumpInclude(const char *filename) {
 	FILE *f_nds_file = fopen(filename, "rb");
 
 	char game_TID[5];
@@ -299,59 +291,73 @@ void SetSpeedBumpExclude(const char *filename) {
 	fread(game_TID, 1, 4, f_nds_file);
 	fclose(f_nds_file);
 
-	static const char list[][5] = {
-		"AWRP",	// Advance Wars: Dual Strike (EUR)
-		"AVCP",	// Magical Starsign (EUR)
-		"YFTP",	// Pokemon Mystery Dungeon: Explorers of Time (EUR)
-		"YFYP",	// Pokemon Mystery Dungeon: Explorers of Darkness (EUR)
+	static const char list[][4] = {
+		"ADM",	// Animal Crossing: Wild World
+		"YR9",	// Castlevania: Order of Ecclesia
+		"AFF",	// Final Fantasy III
+		"YF4",	// Final Fantasy IV
+		"YGX",	// Grand Theft Auto: Chinatown Wars
+		"AZE",	// The Legend of Zelda: Phantom Hourglass
+		"BKI",	// The Legend of Zelda: Spirit Tracks
+		"A5T",	// MegaMan Battle Network 5: Double Team DS
+		"A6C",	// MegaMan Star Force: Dragon
+		"A6B",	// MegaMan Star Force: Leo
+		"A6A",	// MegaMan Star Force: Pegasus
+		"YRW",	// MegaMan Star Force 2: Zerker x Saurian
+		"YRV",	// MegaMan Star Force 2: Zerker x Ninja
+		"CRR",	// MegaMan Star Force 3: Red Joker
+		"CRB",	// MegaMan Star Force 3: Black Ace
+		"ASC",	// Sonic Rush
+		"A3Y",	// Sonic Rush Adventure
 	};
 
 	// TODO: If the list gets large enough, switch to bsearch().
 	for (unsigned int i = 0; i < sizeof(list)/sizeof(list[0]); i++) {
-		if (memcmp(game_TID, list[i], 4) == 0) {
+		if (memcmp(game_TID, list[i], 3) == 0) {
 			// Found a match.
-			ceCached = false;
+			ceCached = true;
 			break;
 		}
 	}
 
-	static const char list2[][4] = {
-		"AEK",	// Age of Empires: The Age of Kings
-		"ALC",	// Animaniacs: Lights, Camera, Action!
-		"YAH",	// Assassin's Creed: Altair's Chronicles
-		//"ACV",	// Castlevania: Dawn of Sorrow	(fixed on nds-bootstrap side)
-		"A5P",	// Harry Potter and the Order of the Phoenix
-		"AR2",	// Kirarin * Revolution: Naasan to Issho
-		"ARM",	// Mario & Luigi: Partners in Time
-		"CLJ",	// Mario & Luigi: Bowser's Inside Story
-		"COL",	// Mario & Sonic at the Olympic Winter Games
-		"AMQ",	// Mario vs. Donkey Kong 2: March of the Minis
-		"B2K",	// Ni no Kuni: Shikkoku no Madoushi
-		"C2S",	// Pokemon Mystery Dungeon: Explorers of Sky
-		"Y6S",	// Pokemon Mystery Dungeon: Explorers of Sky (Demo)
-		"B3R",	// Pokemon Ranger: Guardian Signs
-		"APU",	// Puyo Puyo!! 15th Anniversary
-		"BYO",	// Puyo Puyo 7
-		"YZX",	// Rockman ZX Advent/MegaMan ZX Advent
-	    "B6X", // Rockman EXE: Operate Shooting Star
-	    "B6Z", // Rockman Zero Collection/MegaMan Zero Collection
-		"ARF", // Rune Factory: A Fantasy Harvest Moon
-		"AN6", // Rune Factory 2: A Fantasy Harvest Moon
-		"AS2", // Spider-Man 2
-		"AQ3", // Spider-Man 3
-		"CS7", // Summon Night X: Tears Crown
-		"AYT", // Tales of Innocence
-		"YYK", // Trauma Center: Under the Knife 2
-	};
-
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(list2)/sizeof(list2[0]); i++) {
-		if (memcmp(game_TID, list2[i], 3) == 0) {
-			// Found a match.
-			ceCached = false;
-			break;
-		}
+	scanKeys();
+	if(keysHeld() & KEY_L){
+		ceCached = !ceCached;
 	}
+}
+
+/**
+ * Fix AP for some games.
+ */
+std::string setApFix(const char *filename) {
+	bool useTwlmPath = (access("sd:/_nds/TWiLightMenu/apfix", F_OK) == 0);
+
+	bool ipsFound = false;
+	char ipsPath[256];
+	snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.ips", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), filename);
+	ipsFound = (access(ipsPath, F_OK) == 0);
+
+	if (!ipsFound) {
+		FILE *f_nds_file = fopen(filename, "rb");
+
+		char game_TID[5];
+		u16 headerCRC16 = 0;
+		fseek(f_nds_file, offsetof(sNDSHeader2, gameCode), SEEK_SET);
+		fread(game_TID, 1, 4, f_nds_file);
+		fseek(f_nds_file, offsetof(sNDSHeader2, headerCRC16), SEEK_SET);
+		fread(&headerCRC16, sizeof(u16), 1, f_nds_file);
+		fclose(f_nds_file);
+		game_TID[4] = 0;
+
+		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.ips", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), game_TID, headerCRC16);
+		ipsFound = (access(ipsPath, F_OK) == 0);
+	}
+
+	if (ipsFound) {
+		return ipsPath;
+	}
+
+	return "";
 }
 
 //---------------------------------------------------------------------------------
@@ -423,12 +429,22 @@ int main(int argc, char **argv) {
 
 		std::string ndsPath = ntrforwarderini.GetString("NTR-FORWARDER", "NDS_PATH", "");
 
+		FILE *f_nds_file = fopen(ndsPath.c_str(), "rb");
+		int isHomebrew = checkIfHomebrew(f_nds_file);
+
+		char game_TID[5];
+		grabTID(f_nds_file, game_TID);
+		game_TID[4] = 0;
+		fclose(f_nds_file);
+
 		std::string romfolder = ndsPath;
 		while (!romfolder.empty() && romfolder[romfolder.size()-1] != '/') {
 			romfolder.resize(romfolder.size()-1);
 		}
 		chdir(romfolder.c_str());
-		mkdir ("saves", 0777);
+		if (isHomebrew == 0) {
+			mkdir ("saves", 0777);
+		}
 
 		std::string filename = ndsPath;
 		const size_t last_slash_idx = filename.find_last_of("/");
@@ -437,118 +453,113 @@ int main(int argc, char **argv) {
 			filename.erase(0, last_slash_idx + 1);
 		}
 
-		FILE *f_nds_file = fopen(ndsPath.c_str(), "rb");
-
-		char game_TID[5];
-		grabTID(f_nds_file, game_TID);
-		game_TID[4] = 0;
-		game_TID[3] = 0;
-		fclose(f_nds_file);
-
-		std::string savename = ReplaceAll(filename, ".nds", ".sav");
-		std::string romFolderNoSlash = romfolder;
-		RemoveTrailingSlashes(romFolderNoSlash);
-		std::string savepath = romFolderNoSlash+"/saves/"+savename;
-
-		if (getFileSize(savepath.c_str()) == 0 && strcmp(game_TID, "###") != 0) {
-			consoleDemoInit();
-			iprintf ("Creating save file...\n");
-
-			static const int BUFFER_SIZE = 4096;
-			char buffer[BUFFER_SIZE];
-			memset(buffer, 0, sizeof(buffer));
-
-			int savesize = 524288;	// 512KB (default size for most games)
-
-			// Set save size to 8KB for the following games
-			if (strcmp(game_TID, "ASC") == 0 )	// Sonic Rush
-			{
-				savesize = 8192;
-			}
-
-			// Set save size to 256KB for the following games
-			if (strcmp(game_TID, "AMH") == 0 )	// Metroid Prime Hunters
-			{
-				savesize = 262144;
-			}
-
-			// Set save size to 1MB for the following games
-			if ( strcmp(game_TID, "AZL") == 0		// Wagamama Fashion: Girls Mode/Style Savvy/Nintendo presents: Style Boutique/Namanui Collection: Girls Style
-				|| strcmp(game_TID, "BKI") == 0 )	// The Legend of Zelda: Spirit Tracks
-			{
-				savesize = 1048576;
-			}
-
-			// Set save size to 32MB for the following games
-			if (strcmp(game_TID, "UOR") == 0 )	// WarioWare - D.I.Y. (Do It Yourself)
-			{
-				savesize = 1048576*32;
-			}
-
-			FILE *pFile = fopen(savepath.c_str(), "wb");
-			if (pFile) {
-				for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
-					fwrite(buffer, 1, sizeof(buffer), pFile);
-				}
-				fclose(pFile);
-			}
-			iprintf ("Done!\n");
-		}
-
-		SetDonorSDK(ndsPath.c_str());
-		SetGameSoftReset(ndsPath.c_str());
-		SetMPUSettings(ndsPath.c_str());
-		SetSpeedBumpExclude(ndsPath.c_str());
-
-		CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
-		bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
-		bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
-		bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
-		bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
-		bootstrapini.SetInt("NDS-BOOTSTRAP", "GAME_SOFT_RESET", gameSoftReset);
-		bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
-		bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
-		bootstrapini.SetInt("NDS-BOOTSTRAP", "CARDENGINE_CACHED", ceCached);
-		bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
-		bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
-
-		scanKeys();
-		int held = keysHeld();
-
-		if (strcmp(game_TID, "###") == 0) {
-			if (!(held & KEY_A)) {
-				argarray.push_back((char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-hb-nightly.nds" : "sd:/_nds/nds-bootstrap-hb-release.nds"));
-				int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
-				if (!consoleInited) {
-					consoleDemoInit();
-					consoleInited = true;
-				}
-				if (err == 1) iprintf ("hb-bootstrap not found.\n");
-			}
-		} else {
-			argarray.push_back((char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-nightly.nds" : "sd:/_nds/nds-bootstrap-release.nds"));
+		if (isHomebrew == 2) {
+			argarray.at(0) = (char*)(ndsPath.c_str());
 			int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 			if (!consoleInited) {
 				consoleDemoInit();
 				consoleInited = true;
 			}
 			iprintf("Start failed. Error %i\n", err);
-			if (err == 1) iprintf ("Bootstrap not found.\n");
-		}
+			if (err == 1) iprintf ("ROM not found.\n");
+		} else {
+			std::string savename = ReplaceAll(filename, ".nds", ".sav");
+			std::string romFolderNoSlash = romfolder;
+			RemoveTrailingSlashes(romFolderNoSlash);
+			std::string savepath = romFolderNoSlash+"/saves/"+savename;
 
-		if (!consoleInited) {
-			consoleDemoInit();
-			consoleInited = true;
-		}
-		iprintf ("Running without patches.\n");
-		iprintf ("\n");
-		doPause();
+			if (getFileSize(savepath.c_str()) == 0 && isHomebrew == 0) {
+				consoleDemoInit();
+				iprintf ("Creating save file...\n");
+				iprintf ("\n");
+				iprintf ("If this takes a while,\n");
+				iprintf ("press HOME, and press B.\n");
 
-		argarray.at(0) = (char*)(ndsPath.c_str());
-		int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
-		consoleClear();
-		iprintf("Start failed. Error %i\n", err);
-		if (err == 1) iprintf ("ROM not found.\n");
+				static const int BUFFER_SIZE = 4096;
+				char buffer[BUFFER_SIZE];
+				memset(buffer, 0, sizeof(buffer));
+
+				int savesize = 524288;	// 512KB (default size for most games)
+
+				// Set save size to 8KB for the following games
+				if (strncmp(game_TID, "ASC", 3) == 0 )	// Sonic Rush
+				{
+					savesize = 8192;
+				}
+
+				// Set save size to 256KB for the following games
+				if (strncmp(game_TID, "AMH", 3) == 0 )	// Metroid Prime Hunters
+				{
+					savesize = 262144;
+				}
+
+				// Set save size to 1MB for the following games
+				if (strncmp(game_TID, "AZL", 3) == 0	// Wagamama Fashion: Girls Mode/Style Savvy/Nintendo presents: Style Boutique/Namanui Collection: Girls Style
+				 || strncmp(game_TID, "C6P", 3) == 0	// Picross 3D
+				 || strncmp(game_TID, "BKI", 3) == 0)	// The Legend of Zelda: Spirit Tracks
+				{
+					savesize = 1048576;
+				}
+
+				// Set save size to 32MB for the following games
+				if (strncmp(game_TID, "UOR", 3) == 0	// WarioWare - D.I.Y. (Do It Yourself)
+				 || strncmp(game_TID, "UXB", 3) == 0)	// Jam with the Band
+				{
+					savesize = 1048576*32;
+				}
+
+				FILE *pFile = fopen(savepath.c_str(), "wb");
+				if (pFile) {
+					for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
+						fwrite(buffer, 1, sizeof(buffer), pFile);
+					}
+					fclose(pFile);
+				}
+				iprintf ("Done!\n");
+			}
+
+			if (isHomebrew == 0) {
+				SetDonorSDK(ndsPath.c_str());
+				SetGameSoftReset(ndsPath.c_str());
+				SetMPUSettings(ndsPath.c_str());
+				SetSpeedBumpInclude(ndsPath.c_str());
+			}
+
+			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
+			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
+			bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
+			if (isHomebrew == 0) {
+				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", setApFix(filename.c_str()));
+			}
+			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "GAME_SOFT_RESET", gameSoftReset);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "CARDENGINE_CACHED", ceCached);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
+			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
+
+			if (isHomebrew == 1) {
+				argarray.push_back((char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-hb-nightly.nds" : "sd:/_nds/nds-bootstrap-hb-release.nds"));
+				int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
+				if (!consoleInited) {
+					consoleDemoInit();
+					consoleInited = true;
+				}
+				iprintf("Start failed. Error %i\n", err);
+				if (err == 1) iprintf ("nds-bootstrap (hb) not found.\n");
+			} else {
+				argarray.push_back((char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-nightly.nds" : "sd:/_nds/nds-bootstrap-release.nds"));
+				int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
+				if (!consoleInited) {
+					consoleDemoInit();
+					consoleInited = true;
+				}
+				iprintf("Start failed. Error %i\n", err);
+				if (err == 1) iprintf ("nds-bootstrap not found.\n");
+			}
+		}
 	} else {
 		BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language);
 

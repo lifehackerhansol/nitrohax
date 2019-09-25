@@ -227,4 +227,6 @@ int grabTID(FILE* ndsFile, char *buf);
  */
 u32 getSDKVersion(FILE* ndsFile);
 
+int checkIfHomebrew(FILE* ndsFile);
+
 #endif // NDS_HEADER2

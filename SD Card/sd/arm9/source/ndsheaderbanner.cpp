@@ -5,6 +5,8 @@
 
 #include "ndsheaderbanner.h"
 
+static u32 arm9StartSig[4];
+
 // Subroutine function signatures arm9
 u32 moduleParamsSignature[2]   = {0xDEC00621, 0x2106C0DE};
 
@@ -73,4 +75,36 @@ u32 getSDKVersion(FILE* ndsFile) {
 	}
 
 	return ((module_params_t*)(moduleparams - 0x1C))->sdk_version;
+}
+
+int checkIfHomebrew(FILE* ndsFile) {
+	int res = 0;
+
+	sNDSHeader2 ndsHeader;
+	fseek(ndsFile, 0, SEEK_SET);
+	fread(&ndsHeader, 1, sizeof(ndsHeader), ndsFile);
+	
+	fseek(ndsFile, (ndsHeader.arm9romOffset <= 0x200 ? ndsHeader.arm9romOffset : ndsHeader.arm9romOffset+0x800), SEEK_SET);
+	fread(arm9StartSig, sizeof(u32), 4, ndsFile);
+	if (arm9StartSig[0] == 0xE3A00301
+	 && arm9StartSig[1] == 0xE5800208
+	 && arm9StartSig[2] == 0xE3A00013
+	 && arm9StartSig[3] == 0xE129F000) {
+		res = 2; // Homebrew is recent (supports reading from SD without a DLDI driver)
+		if (ndsHeader.arm7executeAddress >= 0x037F0000 && ndsHeader.arm7destination >= 0x037F0000) {
+			if ((ndsHeader.arm9binarySize == 0xC9F68 && ndsHeader.arm7binarySize == 0x12814)	// Colors! v1.1
+			|| (ndsHeader.arm9binarySize == 0x1B0864 && ndsHeader.arm7binarySize == 0xDB50)	// Mario Paint Composer DS v2 (Bullet Bill)
+			|| (ndsHeader.arm9binarySize == 0xD45C0 && ndsHeader.arm7binarySize == 0x2B7C)		// ikuReader v0.058
+			|| (ndsHeader.arm9binarySize == 0x54620 && ndsHeader.arm7binarySize == 0x1538)		// XRoar 0.24fp3
+			|| (ndsHeader.arm9binarySize == 0x2C9A8 && ndsHeader.arm7binarySize == 0xFB98)) {	// NitroGrafx v0.7
+				res = 1; // Have nds-bootstrap load it (in case if it doesn't)
+			}
+		}
+	} else if (memcmp(ndsHeader.gameTitle, "NDS.TinyFB", 10) == 0) {
+		res = 2; // No need to use nds-bootstrap
+	} else if (ndsHeader.arm7executeAddress >= 0x037F0000 && ndsHeader.arm7destination >= 0x037F0000) {
+		res = 1; // Homebrew is old (requires a DLDI driver to read from SD)
+	}
+
+	return res;
 }

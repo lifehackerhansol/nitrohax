@@ -330,7 +330,7 @@ if not args.read:
 		srlTwlExtHeader=srlTwlExtHeader._replace(
 			accessControl=			0x00000138,
 			arm7ScfgExtMask=		0x80040000,
-			reserved_flags=			0x00000000
+			reserved_flags=			0x01000000
 			)
 				
 if args.verbose or args.read:	
@@ -389,41 +389,6 @@ if args.verbose or args.read:
 
 data3=pack(*[srlSignedHeaderFormat]+srlSignedHeader._asdict().values())
 
-# ARM9 footer 
-# from https://github.com/devkitPro/ndstool/ ... source/header.cpp
-# ARM9 footer size = 3*4
-ARM9Footer = namedtuple('ARM9Footer', 
-	"nitrocode " #0xDEC00621
-	"versionInfo "
-	"reserved "
-	)
-ARM9FooterFormat="<III"
-file = open(fname, 'rb')
-arm9FooterAddr=srlHeader.arm9RomOffset + srlHeader.arm9Size
-file.read(arm9FooterAddr)
-data=file.read(12)
-arm9Footer=ARM9Footer._make(unpack_from(ARM9FooterFormat, data))
-if args.verbose:
-	print "footer addr "+hex(arm9FooterAddr)
-if arm9Footer.nitrocode == 0xDEC00621:
-	if args.verbose or args.read:
-		print "ARM9 footer found."
-		print "no patch needed"
-		print "nitrocode "+hex(arm9Footer.nitrocode)
-		print "versionInfo "+hex(arm9Footer.versionInfo)
-		print "reserved "+hex(arm9Footer.reserved)
-		print "\n"
-else:
-	if args.verbose or args.read:
-		print "ARM9 footer not found.\n"
-	arm9FooterPatched=arm9Footer._replace(
-		nitrocode=		0xDEC00621,
-		versionInfo=	0xad8,
-		reserved=		0
-	)
-	data4=pack(*[ARM9FooterFormat]+arm9FooterPatched._asdict().values())
-file.close()
-
 if not args.read:
 	# write the file
 	if args.out is not None:
@@ -436,13 +401,6 @@ if not args.read:
 	filew.write(data3[0:0xC80])
 	filew.write('\xff'*16*8)
 	writeBlankuntilAddress(filew,0x1000,0x4000)
-	
-	if arm9Footer.nitrocode != 0xDEC00621:
-		# patch ARM9 footer 
-		skipUntilAddress(filer,filew,caddr,arm9FooterAddr)
-		filew.write(data4)
-		filer.read(12)
-		caddr=arm9FooterAddr+12		
 	
 	skipUntilAddress(filer,filew,caddr,srlTwlExtHeader.twlRomSize)
 		
