@@ -463,6 +463,10 @@ int main(int argc, char **argv) {
 			iprintf("Start failed. Error %i\n", err);
 			if (err == 1) iprintf ("ROM not found.\n");
 		} else {
+			// Delete cheat data
+			remove("sd:/_nds/nds-bootstrap/cheatData.bin");
+			remove("sd:/_nds/nds-bootstrap/wideCheatData.bin");
+
 			std::string savename = ReplaceAll(filename, ".nds", ".sav");
 			std::string romFolderNoSlash = romfolder;
 			RemoveTrailingSlashes(romFolderNoSlash);
