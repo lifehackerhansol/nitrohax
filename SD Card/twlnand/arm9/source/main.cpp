@@ -73,6 +73,7 @@ int main(int argc, char **argv) {
 
 		vector<char*> argarray;
 		argarray.push_back((char*)"sd:/_nds/ntr-forwarder/sdcard.nds");
+		argarray.push_back((char*)ndsPath.c_str());
 		int err = runNdsFile(argarray[0], argarray.size(), (const char **)&argarray[0]);
 
 		consoleDemoInit();

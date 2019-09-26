@@ -28,9 +28,6 @@
 
 ---------------------------------------------------------------------------------*/
 #include <nds.h>
-#include <maxmod7.h>
-
-bool soundFreqSet = false;
 
 //---------------------------------------------------------------------------------
 void ReturntoDSiMenu() {
@@ -80,11 +77,8 @@ int main() {
 	
 	fifoInit();
 	
-	mmInstall(FIFO_MAXMOD);
-	
 	SetYtrigger(80);
 	
-	installSoundFIFO();
 	installSystemFIFO();
 
 	irqSet(IRQ_VCOUNT, VcountHandler);
@@ -98,12 +92,6 @@ int main() {
 	while (!exitflag) {
 		if(fifoCheckValue32(FIFO_USER_01)) {
 			ReturntoDSiMenu();
-		}
-		if(fifoCheckValue32(FIFO_USER_08)) {
-			if(!soundFreqSet) {
-				*(u16*)(0x4004700) |= BIT(13);
-				soundFreqSet = true;
-			}
 		}
 		swiWaitForVBlank();
 	}

@@ -33,7 +33,6 @@
 #include "ndsheaderbanner.h"
 #include "nds_loader_arm9.h"
 
-#include "bootsplash.h"
 #include "inifile.h"
 #include "fileCopy.h"
 
@@ -48,6 +47,8 @@ int mpusize = 0;
 bool ceCached = false;
 
 bool bootstrapFile = false;
+
+bool consoleInited = false;
 
 /**
  * Remove trailing slashes from a pathname, if present.
@@ -396,38 +397,15 @@ std::string ReplaceAll(std::string str, const std::string& from, const std::stri
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
-	bool HealthandSafety_MSG = false;
-	bool UseNTRSplash = true;
-	bool SOUND_FREQ = false;
-	bool consoleInited = false;
-
-	// overwrite reboot stub identifier
-	extern u64 *fake_heap_end;
-	*fake_heap_end = 0;
 
 	defaultExceptionHandler();
-
-	scanKeys();
-	int pressed = keysHeld();
 
 	if (fatInitDefault()) {
 		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
 
 		bootstrapFile = ntrforwarderini.GetInt("NTR-FORWARDER", "BOOTSTRAP_FILE", 0);
 
-		HealthandSafety_MSG = ntrforwarderini.GetInt("NTR-FORWARDER","HEALTH&SAFETY_MSG",0);
-		if(ntrforwarderini.GetInt("NTR-FORWARDER","NTR_CLOCK",0) == 0) if( pressed & KEY_A ) {} else { UseNTRSplash = false; }
-		else if( pressed & KEY_A ) { UseNTRSplash = false; }
-		if(ntrforwarderini.GetInt("NTR-FORWARDER","DISABLE_ANIMATION",0) == 0) { if( pressed & KEY_B ) {} else { BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language); } }
-
-		SOUND_FREQ = ntrforwarderini.GetInt("NTR-FORWARDER","SOUND_FREQ",0);
-		if(SOUND_FREQ) {
-			fifoSendValue32(FIFO_USER_08, 1);
-		}
-
-		vector<char*> argarray;
-
-		std::string ndsPath = ntrforwarderini.GetString("NTR-FORWARDER", "NDS_PATH", "");
+		std::string ndsPath = argv[1];
 
 		FILE *f_nds_file = fopen(ndsPath.c_str(), "rb");
 		int isHomebrew = checkIfHomebrew(f_nds_file);
@@ -452,6 +430,8 @@ int main(int argc, char **argv) {
 		{
 			filename.erase(0, last_slash_idx + 1);
 		}
+
+		vector<char*> argarray;
 
 		if (isHomebrew == 2) {
 			argarray.at(0) = (char*)(ndsPath.c_str());
@@ -565,8 +545,6 @@ int main(int argc, char **argv) {
 			}
 		}
 	} else {
-		BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language);
-
 		// Subscreen as a console
 		videoSetModeSub(MODE_0_2D);
 		vramSetBankH(VRAM_H_SUB_BG);

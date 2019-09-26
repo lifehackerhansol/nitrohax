@@ -6,6 +6,7 @@
 #include "ndsheaderbanner.h"
 
 static u32 arm9StartSig[4];
+static sNDSHeader2 ndsHeader;
 
 // Subroutine function signatures arm9
 u32 moduleParamsSignature[2]   = {0xDEC00621, 0x2106C0DE};
@@ -60,16 +61,15 @@ char arm9binary[0x20000];
  * @return 0 on success; non-zero on error.
  */
 u32 getSDKVersion(FILE* ndsFile) {
-	sNDSHeader2 NDSHeader;
 	fseek(ndsFile, 0, SEEK_SET);
-	fread(&NDSHeader, 1, sizeof(NDSHeader), ndsFile);
+	fread(&ndsHeader, 1, sizeof(ndsHeader), ndsFile);
 	
-	fseek(ndsFile, NDSHeader.arm9romOffset, SEEK_SET);
-	if(NDSHeader.arm9binarySize > 0x20000) NDSHeader.arm9binarySize = 0x20000;
-	fread(&arm9binary, 1, NDSHeader.arm9binarySize, ndsFile);
+	fseek(ndsFile, ndsHeader.arm9romOffset, SEEK_SET);
+	if(ndsHeader.arm9binarySize > 0x20000) ndsHeader.arm9binarySize = 0x20000;
+	fread(&arm9binary, 1, ndsHeader.arm9binarySize, ndsFile);
 
 	// Looking for moduleparams
-	uint32_t moduleparams = getOffset((u32*)arm9binary, NDSHeader.arm9binarySize, (u32*)moduleParamsSignature, 2, 1);
+	uint32_t moduleparams = getOffset((u32*)arm9binary, ndsHeader.arm9binarySize, (u32*)moduleParamsSignature, 2, 1);
 	if(!moduleparams) {
 		return 0;
 	}
@@ -80,7 +80,6 @@ u32 getSDKVersion(FILE* ndsFile) {
 int checkIfHomebrew(FILE* ndsFile) {
 	int res = 0;
 
-	sNDSHeader2 ndsHeader;
 	fseek(ndsFile, 0, SEEK_SET);
 	fread(&ndsHeader, 1, sizeof(ndsHeader), ndsFile);
 	
