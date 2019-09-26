@@ -434,7 +434,7 @@ int main(int argc, char **argv) {
 		vector<char*> argarray;
 
 		if (isHomebrew == 2) {
-			argarray.at(0) = (char*)(ndsPath.c_str());
+			argarray.push_back(argv[1]);
 			int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 			if (!consoleInited) {
 				consoleDemoInit();
