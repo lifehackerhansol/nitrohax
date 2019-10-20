@@ -294,10 +294,14 @@ void SetSpeedBumpInclude(const char *filename) {
 
 	static const char list[][4] = {
 		"ADM",	// Animal Crossing: Wild World
+		"CBB",	// Big Bang Mini
+		"ACV",	// Castlevania: Dawn of Sorrow
+		"ACB",	// Castlevania: Portrait of Ruin
 		"YR9",	// Castlevania: Order of Ecclesia
 		"AFF",	// Final Fantasy III
 		"YF4",	// Final Fantasy IV
 		"YGX",	// Grand Theft Auto: Chinatown Wars
+		"YKG",	// Kingdom Hearts: 358/2 Days
 		"AZE",	// The Legend of Zelda: Phantom Hourglass
 		"BKI",	// The Legend of Zelda: Spirit Tracks
 		"A5T",	// MegaMan Battle Network 5: Double Team DS
@@ -308,8 +312,15 @@ void SetSpeedBumpInclude(const char *filename) {
 		"YRV",	// MegaMan Star Force 2: Zerker x Ninja
 		"CRR",	// MegaMan Star Force 3: Red Joker
 		"CRB",	// MegaMan Star Force 3: Black Ace
+		"AP2",	// Metroid Prime Pinball
+		"A5F",	// Professor Layton and the Curious Village
+		"YCX",	// Retro Game Challenge
+		"YT7",	// SEGA Superstars Tennis
 		"ASC",	// Sonic Rush
 		"A3Y",	// Sonic Rush Adventure
+		"AL3",	// SpongeBob's Atlantis SquarePantis
+		"YUT",	// Ultimate Mortal Kombat
+		"AWL",	// The World Ends With You
 	};
 
 	// TODO: If the list gets large enough, switch to bsearch().
@@ -522,6 +533,7 @@ int main(int argc, char **argv) {
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CARDENGINE_CACHED", ceCached);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "LANGUAGE", -1);
 			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
 
 			if (isHomebrew == 1) {
