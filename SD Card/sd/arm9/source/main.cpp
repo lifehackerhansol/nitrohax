@@ -36,19 +36,20 @@
 #include "inifile.h"
 #include "fileCopy.h"
 
+#include "donorMap.h"
+#include "speedBumpExcludeMap.h"
+
 using namespace std;
 
 static bool boostCpu = false;
 static bool boostVram = false;
 static int dsiMode = 0;
 
-static int donorSdkVer = 0;
-
 static bool gameSoftReset = false;
 
 static int mpuregion = 0;
 static int mpusize = 0;
-static bool ceCached = false;
+static bool ceCached = true;
 
 static bool bootstrapFile = false;
 
@@ -68,104 +69,22 @@ void RemoveTrailingSlashes(std::string& path)
 /**
  * Set donor SDK version for a specific game.
  */
-void SetDonorSDK(const char* filename) {
+int SetDonorSDK(const char* filename) {
 	FILE *f_nds_file = fopen(filename, "rb");
 
 	char game_TID[5];
 	grabTID(f_nds_file, game_TID);
-	game_TID[4] = 0;
-	game_TID[3] = 0;
 	fclose(f_nds_file);
 	
-	donorSdkVer = 0;
+	for (auto i : donorMap) {
+		if (i.first == 5 && game_TID[0] == 'V')
+			return 5;
 
-	// Check for ROM hacks that need an SDK version.
-	static const char sdk2_list[][4] = {
-		"AMQ",	// Mario vs. Donkey Kong 2 - March of the Minis
-		"AMH",	// Metroid Prime Hunters
-		"ASM",	// Super Mario 64 DS
-	};
-	
-	static const char sdk3_list[][4] = {
-		"AMC",	// Mario Kart DS
-		"EKD",	// Ermii Kart DS (Mario Kart DS hack)
-		"A2D",	// New Super Mario Bros.
-		"ADA",	// Pokemon Diamond
-		"APA",	// Pokemon Pearl
-		"ARZ",	// Rockman ZX/MegaMan ZX
-		"YZX",	// Rockman ZX Advent/MegaMan ZX Advent
-	};
-	
-	static const char sdk4_list[][4] = {
-		"YKW",	// Kirby Super Star Ultra
-		"A6C",	// MegaMan Star Force: Dragon
-		"A6B",	// MegaMan Star Force: Leo
-		"A6A",	// MegaMan Star Force: Pegasus
-		"B6Z",	// Rockman Zero Collection/MegaMan Zero Collection
-		"YT7",	// SEGA Superstars Tennis
-		"AZL",	// Style Savvy
-		"BKI",	// The Legend of Zelda: Spirit Tracks
-		"B3R",	// Pokemon Ranger: Guardian Signs
-	};
-
-	static const char sdk5_list[][4] = {
-		"B2D",	// Doctor Who: Evacuation Earth
-		"BH2",	// Super Scribblenauts
-		"BSD",	// Lufia: Curse of the Sinistrals
-		"BXS",	// Sonic Colo(u)rs
-		"BOE",	// Inazuma Eleven 3: Sekai heno Chousen! The Ogre
-		"BQ8",	// Crafting Mama
-		"BK9",	// Kingdom Hearts: Re-Coded
-		"BRJ",	// Radiant Historia
-		"IRA",	// Pokemon Black Version
-		"IRB",	// Pokemon White Version
-		"VI2",	// Fire Emblem: Shin Monshou no Nazo Hikari to Kage no Eiyuu
-		"BYY",	// Yu-Gi-Oh 5Ds World Championship 2011: Over The Nexus
-		"UZP",	// Learn with Pokemon: Typing Adventure
-		"B6F",	// LEGO Batman 2: DC Super Heroes
-		"IRE",	// Pokemon Black Version 2
-		"IRD",	// Pokemon White Version 2
-	};
-
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sdk2_list) / sizeof(sdk2_list[0]); i++) {
-		if (!memcmp(game_TID, sdk2_list[i], 3)) {
-			// Found a match.
-			donorSdkVer = 2;
-			break;
-		}
-	}
-	
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sdk3_list) / sizeof(sdk3_list[0]); i++) {
-		if (!memcmp(game_TID, sdk3_list[i], 3)) {
-			// Found a match.
-			donorSdkVer = 3;
-			break;
-		}
+		if (i.second.find(game_TID) != i.second.cend())
+			return i.first;
 	}
 
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sdk4_list) / sizeof(sdk4_list[0]); i++) {
-		if (!memcmp(game_TID, sdk4_list[i], 3)) {
-			// Found a match.
-			donorSdkVer = 4;
-			break;
-		}
-	}
-
-	if (strncmp(game_TID, "V", 1) == 0) {
-		donorSdkVer = 5;
-	} else {
-		// TODO: If the list gets large enough, switch to bsearch().
-		for (unsigned int i = 0; i < sizeof(sdk5_list) / sizeof(sdk5_list[0]); i++) {
-			if (!memcmp(game_TID, sdk5_list[i], 3)) {
-				// Found a match.
-				donorSdkVer = 5;
-				break;
-			}
-		}
-	}
+	return 0;
 }
 
 /**
@@ -296,42 +215,20 @@ void SetSpeedBumpInclude(const char *filename) {
 	fread(game_TID, 1, 4, f_nds_file);
 	fclose(f_nds_file);
 
-	static const char list[][4] = {
-		"ADM",	// Animal Crossing: Wild World
-		"CBB",	// Big Bang Mini
-		"ACV",	// Castlevania: Dawn of Sorrow
-		"ACB",	// Castlevania: Portrait of Ruin
-		"YR9",	// Castlevania: Order of Ecclesia
-		"AFF",	// Final Fantasy III
-		"YF4",	// Final Fantasy IV
-		"YGX",	// Grand Theft Auto: Chinatown Wars
-		"YKG",	// Kingdom Hearts: 358/2 Days
-		"AZE",	// The Legend of Zelda: Phantom Hourglass
-		"BKI",	// The Legend of Zelda: Spirit Tracks
-		"A5T",	// MegaMan Battle Network 5: Double Team DS
-		"A6C",	// MegaMan Star Force: Dragon
-		"A6B",	// MegaMan Star Force: Leo
-		"A6A",	// MegaMan Star Force: Pegasus
-		"YRW",	// MegaMan Star Force 2: Zerker x Saurian
-		"YRV",	// MegaMan Star Force 2: Zerker x Ninja
-		"CRR",	// MegaMan Star Force 3: Red Joker
-		"CRB",	// MegaMan Star Force 3: Black Ace
-		"AP2",	// Metroid Prime Pinball
-		"A5F",	// Professor Layton and the Curious Village
-		"YCX",	// Retro Game Challenge
-		"YT7",	// SEGA Superstars Tennis
-		"ASC",	// Sonic Rush
-		"A3Y",	// Sonic Rush Adventure
-		"AL3",	// SpongeBob's Atlantis SquarePantis
-		"YUT",	// Ultimate Mortal Kombat
-		"AWL",	// The World Ends With You
-	};
+	// TODO: If the list gets large enough, switch to bsearch().
+	for (unsigned int i = 0; i < sizeof(sbeList)/sizeof(sbeList[0]); i++) {
+		if (memcmp(game_TID, sbeList[i], 4) == 0) {
+			// Found a match.
+			ceCached = false;
+			break;
+		}
+	}
 
 	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(list)/sizeof(list[0]); i++) {
-		if (memcmp(game_TID, list[i], 3) == 0) {
-			// Found a match.
-			ceCached = true;
+	for (unsigned int i = 0; i < sizeof(sbeList2)/sizeof(sbeList2[0]); i++) {
+		if (memcmp(game_TID, sbeList2[i], 3) == 0) {
+			// Found match
+			ceCached = false;
 			break;
 		}
 	}
@@ -500,9 +397,15 @@ int main(int argc, char **argv) {
 					savesize = 1048576;
 				}
 
-				// Set save size to 32MB for the following games
-				if (strncmp(game_TID, "UOR", 3) == 0	// WarioWare - D.I.Y. (Do It Yourself)
+				// Set save size to 8MB for the following games
+				if (strncmp(game_TID, "VAA", 3) == 0	// Art Academy
 				 || strncmp(game_TID, "UXB", 3) == 0)	// Jam with the Band
+				{
+					savesize = 1048576*8;
+				}
+
+				// Set save size to 32MB for the following games
+				if (strncmp(game_TID, "UOR", 3) == 0)	// WarioWare - D.I.Y. (Do It Yourself)
 				{
 					savesize = 1048576*32;
 				}
@@ -517,8 +420,10 @@ int main(int argc, char **argv) {
 				iprintf ("Done!\n");
 			}
 
+			int donorSdkVer = 0;
+
 			if (isHomebrew == 0) {
-				SetDonorSDK(ndsPath.c_str());
+				donorSdkVer = SetDonorSDK(ndsPath.c_str());
 				SetGameSoftReset(ndsPath.c_str());
 				SetMPUSettings(ndsPath.c_str());
 				SetSpeedBumpInclude(ndsPath.c_str());
