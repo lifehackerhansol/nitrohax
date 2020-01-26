@@ -370,6 +370,7 @@ int main(int argc, char **argv) {
 				iprintf ("\n");
 				iprintf ("If this takes a while,\n");
 				iprintf ("press HOME, and press B.\n");
+				iprintf ("\n");
 
 				static const int BUFFER_SIZE = 4096;
 				char buffer[BUFFER_SIZE];
