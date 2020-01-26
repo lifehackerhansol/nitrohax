@@ -38,17 +38,20 @@
 
 using namespace std;
 
-int donorSdkVer = 0;
+static bool boostCpu = false;
+static bool boostVram = false;
 
-bool gameSoftReset = false;
+static int donorSdkVer = 0;
 
-int mpuregion = 0;
-int mpusize = 0;
-bool ceCached = false;
+static bool gameSoftReset = false;
 
-bool bootstrapFile = false;
+static int mpuregion = 0;
+static int mpusize = 0;
+static bool ceCached = false;
 
-bool consoleInited = false;
+static bool bootstrapFile = false;
+
+static bool consoleInited = false;
 
 /**
  * Remove trailing slashes from a pathname, if present.
@@ -521,12 +524,19 @@ int main(int argc, char **argv) {
 			}
 
 			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
+			// Read
+			boostCpu = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
+			boostVram = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
+
+			// Write
 			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
 			bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
 			if (isHomebrew == 0) {
 				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", setApFix(filename.c_str()));
 			}
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "GAME_SOFT_RESET", gameSoftReset);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
