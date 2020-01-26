@@ -40,6 +40,7 @@ using namespace std;
 
 static bool boostCpu = false;
 static bool boostVram = false;
+static int dsiMode = 0;
 
 static int donorSdkVer = 0;
 
@@ -527,6 +528,9 @@ int main(int argc, char **argv) {
 			// Read
 			boostCpu = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
 			boostVram = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
+			dsiMode = bootstrapini.GetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
+			if (dsiMode < 0) dsiMode = 0;
+			else if (dsiMode > 2) dsiMode = 2;
 
 			// Write
 			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
@@ -537,6 +541,7 @@ int main(int argc, char **argv) {
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "GAME_SOFT_RESET", gameSoftReset);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
