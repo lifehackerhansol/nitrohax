@@ -319,22 +319,11 @@ int main(int argc, char **argv) {
 
 		std::string ndsPath = argv[1];
 
-		FILE *f_nds_file = fopen(ndsPath.c_str(), "rb");
-		int isHomebrew = checkIfHomebrew(f_nds_file);
-
-		char game_TID[5];
-		grabTID(f_nds_file, game_TID);
-		game_TID[4] = 0;
-		fclose(f_nds_file);
-
 		std::string romfolder = ndsPath;
 		while (!romfolder.empty() && romfolder[romfolder.size()-1] != '/') {
 			romfolder.resize(romfolder.size()-1);
 		}
 		chdir(romfolder.c_str());
-		if (isHomebrew == 0) {
-			mkdir ("saves", 0777);
-		}
 
 		std::string filename = ndsPath;
 		const size_t last_slash_idx = filename.find_last_of("/");
@@ -342,6 +331,18 @@ int main(int argc, char **argv) {
 		{
 			filename.erase(0, last_slash_idx + 1);
 		}
+
+		FILE *f_nds_file = fopen(filename.c_str(), "rb");
+		int isHomebrew = checkIfHomebrew(f_nds_file);
+
+		if (isHomebrew == 0) {
+			mkdir ("saves", 0777);
+		}
+
+		char game_TID[5];
+		grabTID(f_nds_file, game_TID);
+		game_TID[4] = 0;
+		fclose(f_nds_file);
 
 		vector<char*> argarray;
 
