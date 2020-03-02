@@ -356,6 +356,15 @@ int main(int argc, char **argv) {
 			iprintf("Start failed. Error %i\n", err);
 			if (err == 1) iprintf ("ROM not found.\n");
 		} else {
+			mkdir ("sd:/_nds/nds-bootstrap", 0777);
+
+			FILE *headerFile = fopen("sd:/_nds/ntr-forwarder/header.bin", "rb");
+			FILE *srBackendFile = fopen("sd:/_nds/nds-bootstrap/srBackendId.bin", "wb");
+			fread(__DSiHeader, 1, 0x1000, headerFile);
+			fwrite((char*)__DSiHeader+0x230, sizeof(u32), 2, srBackendFile);
+			fclose(headerFile);
+			fclose(srBackendFile);
+
 			// Delete cheat data
 			remove("sd:/_nds/nds-bootstrap/cheatData.bin");
 			remove("sd:/_nds/nds-bootstrap/wideCheatData.bin");
