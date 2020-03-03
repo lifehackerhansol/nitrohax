@@ -44,8 +44,7 @@ using namespace std;
 static bool boostCpu = false;
 static bool boostVram = false;
 static int dsiMode = 0;
-
-static bool gameSoftReset = false;
+static bool cacheFatTable = false;
 
 static int mpuregion = 0;
 static int mpusize = 0;
@@ -85,51 +84,6 @@ int SetDonorSDK(const char* filename) {
 	}
 
 	return 0;
-}
-
-/**
- * Disable soft-reset, in favor of non OS_Reset one, for a specific game.
- */
-void SetGameSoftReset(const char* filename) {
-	scanKeys();
-	if(keysHeld() & KEY_R){
-		gameSoftReset = true;
-		return;
-	}
-
-	FILE *f_nds_file = fopen(filename, "rb");
-
-	char game_TID[5];
-	fseek(f_nds_file, offsetof(sNDSHeadertitlecodeonly, gameCode), SEEK_SET);
-	fread(game_TID, 1, 4, f_nds_file);
-	game_TID[4] = 0;
-	game_TID[3] = 0;
-	fclose(f_nds_file);
-
-	gameSoftReset = false;
-
-	// Check for games that have it's own reset function (OS_Reset not used).
-	static const char list[][4] = {
-		"NTR",	// Download Play ROMs
-		"ASM",	// Super Mario 64 DS
-		"SMS",	// Super Mario Star World, and Mario's Holiday
-		"AMC",	// Mario Kart DS
-		"EKD",	// Ermii Kart DS
-		"A2D",	// New Super Mario Bros.
-		"ARZ",	// Rockman ZX/MegaMan ZX
-		"AKW",	// Kirby Squeak Squad/Mouse Attack
-		"YZX",	// Rockman ZX Advent/MegaMan ZX Advent
-		"B6Z",	// Rockman Zero Collection/MegaMan Zero Collection
-	};
-
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(list)/sizeof(list[0]); i++) {
-		if (memcmp(game_TID, list[i], 3) == 0) {
-			// Found a match.
-			gameSoftReset = true;
-			break;
-		}
-	}
 }
 
 /**
@@ -435,7 +389,6 @@ int main(int argc, char **argv) {
 
 			if (isHomebrew == 0) {
 				donorSdkVer = SetDonorSDK(ndsPath.c_str());
-				SetGameSoftReset(ndsPath.c_str());
 				SetMPUSettings(ndsPath.c_str());
 				SetSpeedBumpInclude(ndsPath.c_str());
 			}
@@ -447,6 +400,7 @@ int main(int argc, char **argv) {
 			dsiMode = bootstrapini.GetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
 			if (dsiMode < 0) dsiMode = 0;
 			else if (dsiMode > 2) dsiMode = 2;
+			cacheFatTable = bootstrapini.GetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
 
 			// Write
 			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
@@ -458,8 +412,8 @@ int main(int argc, char **argv) {
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "GAME_SOFT_RESET", gameSoftReset);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CARDENGINE_CACHED", ceCached);
