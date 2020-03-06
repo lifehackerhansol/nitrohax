@@ -78,10 +78,18 @@ int main(int argc, char **argv) {
 
 		consoleDemoInit();
 		iprintf("Start failed. Error %i\n", err);
-		if (err == 1) iprintf("SD card template\nnot found.\n");
+		if (err == 1) {
+			iprintf("/_nds/ntr-forwarder/sdcard.nds\n");
+			iprintf("not found.\n");
+			iprintf("\n");
+			iprintf("Please get this file from\n");
+			iprintf("the SD forwarder pack, in\n");
+			iprintf("\"for SD card root/_nds/\n");
+			iprintf("ntr-forwarder\"");
+		}
 	} else {
 		consoleDemoInit();
-		iprintf("fatinitDefault failed!\n");
+		iprintf("fatinitDefault failed!");
 	}
 
 	iprintf("\n");		

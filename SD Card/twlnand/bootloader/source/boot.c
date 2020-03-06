@@ -48,7 +48,6 @@ Helpful information:
 #include <nds/arm7/audio.h>
 #include <nds/arm7/sdmmc.h>
 #include "fat.h"
-#include "dldi_patcher.h"
 #include "card.h"
 #include "boot.h"
 
@@ -352,13 +351,6 @@ int main (void) {
 
 	// Load the NDS file
 	loadBinary_ARM7(fileCluster);
-
-#ifndef NO_DLDI
-	// Patch with DLDI if desired
-	if (wantToPatchDLDI) {
-		dldiPatchBinary ((u8*)((u32*)NDS_HEAD)[0x0A], ((u32*)NDS_HEAD)[0x0B]);
-	}
-#endif
 
 #ifndef NO_SDMMC
 	if (dsiSD && dsiMode) {
