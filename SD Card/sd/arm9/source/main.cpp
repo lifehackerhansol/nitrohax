@@ -72,7 +72,10 @@ int SetDonorSDK(const char* filename) {
 	FILE *f_nds_file = fopen(filename, "rb");
 
 	char game_TID[5];
-	grabTID(f_nds_file, game_TID);
+	fseek(f_nds_file, offsetof(sNDSHeadertitlecodeonly, gameCode), SEEK_SET);
+	fread(game_TID, 1, 4, f_nds_file);
+	game_TID[4] = 0;
+	game_TID[3] = 0;
 	fclose(f_nds_file);
 	
 	for (auto i : donorMap) {
