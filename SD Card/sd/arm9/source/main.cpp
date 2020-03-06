@@ -164,22 +164,13 @@ void SetMPUSettings(const char* filename) {
 /**
  * Exclude moving nds-bootstrap's cardEngine_arm9 to cached memory region for some games.
  */
-void SetSpeedBumpInclude(const char *filename) {
+void SetSpeedBumpExclude(const char *filename) {
 	FILE *f_nds_file = fopen(filename, "rb");
 
 	char game_TID[5];
 	fseek(f_nds_file, offsetof(sNDSHeadertitlecodeonly, gameCode), SEEK_SET);
 	fread(game_TID, 1, 4, f_nds_file);
 	fclose(f_nds_file);
-
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sbeList)/sizeof(sbeList[0]); i++) {
-		if (memcmp(game_TID, sbeList[i], 4) == 0) {
-			// Found a match.
-			ceCached = false;
-			break;
-		}
-	}
 
 	// TODO: If the list gets large enough, switch to bsearch().
 	for (unsigned int i = 0; i < sizeof(sbeList2)/sizeof(sbeList2[0]); i++) {
@@ -393,7 +384,7 @@ int main(int argc, char **argv) {
 			if (isHomebrew == 0) {
 				donorSdkVer = SetDonorSDK(ndsPath.c_str());
 				SetMPUSettings(ndsPath.c_str());
-				SetSpeedBumpInclude(ndsPath.c_str());
+				SetSpeedBumpExclude(ndsPath.c_str());
 			}
 
 			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
