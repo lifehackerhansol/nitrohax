@@ -394,7 +394,7 @@ int main(int argc, char **argv) {
 			}
 
 			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
-			// Read
+			// Fix weird bug where some settings would be cleared
 			boostCpu = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
 			boostVram = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
 			dsiMode = bootstrapini.GetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
@@ -409,10 +409,10 @@ int main(int argc, char **argv) {
 				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", setApFix(filename.c_str()));
 			}
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
+			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
+			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
+			//bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
+			//bootstrapini.SetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
