@@ -27,12 +27,12 @@
 #include <limits.h>
 #include <nds/disc_io.h>
 
+#include <string>
+#include <vector>
 #include <string.h>
 #include <unistd.h>
 
 #include "nds_loader_arm9.h"
-
-#include "inifile.h"
 
 using namespace std;
 
@@ -45,19 +45,6 @@ void stop (void) {
 }
 
 //---------------------------------------------------------------------------------
-void doPause() {
-//---------------------------------------------------------------------------------
-	iprintf("Press start...\n");
-	while(1) {
-		scanKeys();
-		if(keysDown() & KEY_START)
-			break;
-		swiWaitForVBlank();
-	}
-	scanKeys();
-}
-
-//---------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
 	if (fatInitDefault()) {
@@ -65,11 +52,7 @@ int main(int argc, char **argv) {
 		fwrite(__DSiHeader, 1, 0x1000, headerFile);
 		fclose(headerFile);
 
-		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
-
 		std::string ndsPath = "sd:/<<<Start NDS Path                                                                                                                                                                                                                            End NDS Path>>>";
-		ntrforwarderini.SetString("NTR-FORWARDER", "NDS_PATH", ndsPath);
-		ntrforwarderini.SaveIniFile( "sd:/_nds/ntr_forwarder.ini" );
 
 		vector<char*> argarray;
 		argarray.push_back((char*)"sd:/_nds/ntr-forwarder/sdcard.nds");
