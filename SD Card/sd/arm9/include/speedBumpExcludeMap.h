@@ -2,6 +2,7 @@
 #define SBEMAP_H
 
 	static const char sbeList2[][4] = {
+		"CQS",	// 007: Quantum of Solace
 		"C32",	// Ace Attorney Investigations: Miles Edgeworth
 		"AWR",	// Advance Wars: Dual Strike
 		"AEK",	// Age of Empires: The Age of Kings
@@ -10,18 +11,20 @@
 		"B6R",	// Bakugan: Battle Brawlers
 		"AB2",	// Battles of Prince of Persia
 		"YB4",	// Bee Movie
+		"B7N",	// Ben 10 Triple Pack
 		"CBK",	// Bolt
 		"CBD",	// Bolt: Be-Awesome Edition
 		//"ACV",	// Castlevania: Dawn of Sorrow	(fixed on nds-bootstrap side)
 		"YCE",	// Chessmaster - The Art of Learning
 		"YCP",	// Chuukana Janshi Tenhoo Painyan Remix
 		"BIG",	// Combat/Battle of Giants: Mutant Insects
+		"ADK",	// Daikoukai Jidai IV: Rota Nova
 		"BDB",	// Dragon Ball: Origins 2
 		"YIV",	// Dragon Quest IV: Chapters of the Chosen
 		"AE4",	// Eyeshield 21 Max Devil Power
 		"APR",	// Feel the Magic: XY XX
 		"A26",	// Feel the Magic: XY XX (Demo)
-		"CYY",	// Giana Sisters DS (EUR)
+		//"CYY",	// Giana Sisters DS (EUR)
 		"A5P",	// Harry Potter and the Order of the Phoenix
 		"CQ7",	// Henry Hatsworth
 		"YIP",	// Idol Janshi Suchi-Pai III Remix
@@ -30,20 +33,22 @@
 		"YLU",	// Last Window: The Secret of Cape West
 		"ANI",	// Luminous Arc
 		"AVC",	// Magical Starsign
-		"ARM",	// Mario & Luigi: Partners in Time
-		"CLJ",	// Mario & Luigi: Bowser's Inside Story
+		//"ARM",	// Mario & Luigi: Partners in Time
+		//"CLJ",	// Mario & Luigi: Bowser's Inside Story
 		"COL",	// Mario & Sonic at the Olympic Winter Games
 		"AMQ",	// Mario vs. Donkey Kong 2: March of the Minis
-		"AMH",	// Metroid Prime Hunters
+		//"AMH",	// Metroid Prime Hunters
 		"YNP",	// Need for Speed: ProStreet
 		"A2D",	// New Super Mario Bros.
 		"BSK",	// Nine Hours, Nine Persons, Nine Doors
+		"CUP",	// Peppa Pig: The Game
+		"A8N",	// Planet Puzzle League
 		"YFY",	// Pokemon Mystery Dungeon: Explorers of Darkness
 		"YFT",	// Pokemon Mystery Dungeon: Explorers of Time
 		"Y4R",	// Pokemon Mystery Dungeon: Explorers of Time + Explorers of Darkness (Demo)
 		"C2S",	// Pokemon Mystery Dungeon: Explorers of Sky
 		"Y6S",	// Pokemon Mystery Dungeon: Explorers of Sky (Demo)
-		"B3R",	// Pokemon Ranger: Guardian Signs
+		//"B3R",	// Pokemon Ranger: Guardian Signs
 		"BPP",	// PostPet DS: Yumemiru Momo to Fushigi no Pen
 		"APU",	// Puyo Puyo!! 15th Anniversary
 		"BYO",	// Puyo Puyo 7
@@ -68,12 +73,18 @@
 		"YG4",	// Suikoden: Tierkreis
 		"CS7",	// Summon Night X: Tears Crown
 		"AYT",	// Tales of Innocence
+		"AG7",	// Tamagotchi Connection: Corner Shop
 		"YT9",	// Tony Hawk's Proving Ground
 		"AH9",	// Tony Hawk's American Sk8land
 		"AFZ",	// Transformers: Autobots
 		"AFY",	// Transformers: Decepticons
+		"BAO",	// Transformers: War for Cybertron: Autobots
+		"BDI",	// Transformers: War for Cybertron: Decepticons
 		"YYK",	// Trauma Center: Under the Knife 2
+		"ATB",	// Tsubasa Chronicle
 		"AUS",	// Ultimate Spider-Man
+		"AWW",	// The Wild West
+		"AYJ",	// Yakitate!! Japan: Game Ichigou: Choujou Kessen!! Pantasic Grand Prix!
 		"CY8",	// Yu-Gi-Oh! World Championship 2009
 		"BYX",	// Yu-Gi-Oh! World Championship 2010
 	};
