@@ -265,7 +265,16 @@ int main(int argc, char **argv) {
 
 		bootstrapFile = ntrforwarderini.GetInt("NTR-FORWARDER", "BOOTSTRAP_FILE", 0);
 
-		std::string ndsPath = argv[1];
+		std::string ndsPath = (std::string)argv[1];
+		/*consoleDemoInit();
+		printf(argv[1]);
+		printf("\n");
+		printf("Press START\n");
+		while (1) {
+			scanKeys();
+			if (keysDown() & KEY_START) break;
+			swiWaitForVBlank();
+		}*/
 
 		std::string romfolder = ndsPath;
 		while (!romfolder.empty() && romfolder[romfolder.size()-1] != '/') {
@@ -450,7 +459,7 @@ int main(int argc, char **argv) {
 
 	while (1) {
 		scanKeys();
-		if (keysHeld() & KEY_B) fifoSendValue32(FIFO_USER_01, 1);	// Tell ARM7 to reboot into 3DS HOME Menu (power-off/sleep mode screen skipped)
+		if (keysDown() & KEY_B) fifoSendValue32(FIFO_USER_01, 1);	// Tell ARM7 to reboot into 3DS HOME Menu (power-off/sleep mode screen skipped)
 		swiWaitForVBlank();
 	}
 

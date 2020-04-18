@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 
 	while (1) {
 		scanKeys();
-		if (keysHeld() & KEY_B) fifoSendValue32(FIFO_USER_01, 1);	// Tell ARM7 to reboot into 3DS HOME Menu (power-off/sleep mode screen skipped)
+		if (keysDown() & KEY_B) fifoSendValue32(FIFO_USER_01, 1);	// Tell ARM7 to reboot into 3DS HOME Menu (power-off/sleep mode screen skipped)
 		swiWaitForVBlank();
 	}
 
