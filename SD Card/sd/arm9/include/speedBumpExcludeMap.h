@@ -1,6 +1,7 @@
 #ifndef SBEMAP_H
 #define SBEMAP_H
 
+	// Heap Shrink blacklist
 	static const char sbeList2[][4] = {
 		"CQS",	// 007: Quantum of Solace
 		"C32",	// Ace Attorney Investigations: Miles Edgeworth
@@ -10,6 +11,7 @@
 		"ALC",	// Animaniacs: Lights, Camera, Action!
 		"YAH",	// Assassin's Creed: Altair's Chronicles
 		"B6R",	// Bakugan: Battle Brawlers
+		"BGH",	// Band Hero
 		"AB2",	// Battles of Prince of Persia
 		"YB4",	// Bee Movie
 		"B7N",	// Ben 10 Triple Pack
@@ -29,19 +31,24 @@
 		"APR",	// Feel the Magic: XY XX
 		"A26",	// Feel the Magic: XY XX (Demo)
 		//"CYY",	// Giana Sisters DS (EUR)
+		"YGH",	// Guitar Hero: On Tour
+		"Y5R",	// Guitar Hero: On Tour (Demo)
+		"CGS",	// Guitar Hero: On Tour: Decades
+		"Y56",	// Guitar Hero: On Tour: Decades (Demo)
+		"C6Q",	// Guitar Hero: On Tour: Modern Hits
+		"Y6R",	// Guitar Hero: On Tour: Modern Hits (Demo)
 		"A5P",	// Harry Potter and the Order of the Phoenix
 		"CQ7",	// Henry Hatsworth
 		"YIP",	// Idol Janshi Suchi-Pai III Remix
+	    "AK4",	// Kabu Trader Shun
 		"AR2",	// Kirarin * Revolution: Naasan to Issho
+		"YKF",	// Kung Fu Panda
 		"B3X",	// Kunio-kun no Chou Nekketsu!: Soccer League Plus: World Hyper Cup Hen
 		"YLU",	// Last Window: The Secret of Cape West
 		"ANI",	// Luminous Arc
 		"AVC",	// Magical Starsign
-		//"ARM",	// Mario & Luigi: Partners in Time
-		//"CLJ",	// Mario & Luigi: Bowser's Inside Story
 		"COL",	// Mario & Sonic at the Olympic Winter Games
 		"AMQ",	// Mario vs. Donkey Kong 2: March of the Minis
-		//"AMH",	// Metroid Prime Hunters
 		"YNP",	// Need for Speed: ProStreet
 		"A2D",	// New Super Mario Bros.
 		"BSK",	// Nine Hours, Nine Persons, Nine Doors
@@ -52,7 +59,6 @@
 		"Y4R",	// Pokemon Mystery Dungeon: Explorers of Time + Explorers of Darkness (Demo)
 		"C2S",	// Pokemon Mystery Dungeon: Explorers of Sky
 		"Y6S",	// Pokemon Mystery Dungeon: Explorers of Sky (Demo)
-		//"B3R",	// Pokemon Ranger: Guardian Signs
 		"BPP",	// PostPet DS: Yumemiru Momo to Fushigi no Pen
 		"APU",	// Puyo Puyo!! 15th Anniversary
 		"BYO",	// Puyo Puyo 7
@@ -61,7 +67,6 @@
 		//"ARZ",	// Rockman ZX/MegaMan ZX
 		"YZX",	// Rockman ZX Advent/MegaMan ZX Advent
 		"B6X",	// Rockman EXE: Operate Shooting Star
-		"B6Z",	// Rockman Zero Collection/MegaMan Zero Collection
 		"AKA",	// The Rub Rabbits!
 		"ARF",	// Rune Factory: A Fantasy Harvest Moon
 		"A6N",	// Rune Factory 2: A Fantasy Harvest Moon
@@ -76,6 +81,7 @@
 		"BJM",	// Stitch Jam
 		"YG4",	// Suikoden: Tierkreis
 		"CS7",	// Summon Night X: Tears Crown
+		"AXU",	// Surf's Up
 		"AYT",	// Tales of Innocence
 		"AG7",	// Tamagotchi Connection: Corner Shop
 		"YT9",	// Tony Hawk's Proving Ground
