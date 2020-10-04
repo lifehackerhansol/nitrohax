@@ -38,6 +38,7 @@
 
 #include "donorMap.h"
 #include "speedBumpExcludeMap.h"
+#include "saveMap.h"
 
 using namespace std;
 
@@ -149,6 +150,7 @@ void SetMPUSettings(const char* filename) {
 		"A7R",	// DS Download Station - Vol 17
 		"A7S",	// DS Download Station - Vol 18
 		"A7T",	// DS Download Station - Vol 19
+		"AK4", // Kabu Trader Shun
 		"ARZ",	// Rockman ZX/MegaMan ZX
 		"YZX",	// Rockman ZX Advent/MegaMan ZX Advent
 		"B6Z",	// Rockman Zero Collection/MegaMan Zero Collection
@@ -336,61 +338,53 @@ int main(int argc, char **argv) {
 			RemoveTrailingSlashes(romFolderNoSlash);
 			std::string savepath = romFolderNoSlash+"/saves/"+savename;
 
-			if (getFileSize(savepath.c_str()) == 0 && isHomebrew == 0) {
-				consoleDemoInit();
-				iprintf ("Creating save file...\n");
-				iprintf ("\n");
-				iprintf ("If this takes a while,\n");
-				iprintf ("press HOME, and press B.\n");
-				iprintf ("\n");
-
-				static const int BUFFER_SIZE = 4096;
-				char buffer[BUFFER_SIZE];
-				memset(buffer, 0, sizeof(buffer));
-
-				int savesize = 524288;	// 512KB (default size for most games)
-
-				// Set save size to 8KB for the following games
-				if (strncmp(game_TID, "ASC", 3) == 0 )	// Sonic Rush
-				{
-					savesize = 8192;
+			if (isHomebrew == 0 && (strncmp(game_TID, "NTR", 3) != 0)) {
+				char gameTid3[5];
+				for (int i = 0; i < 3; i++) {
+					gameTid3[i] = game_TID[i];
 				}
 
-				// Set save size to 256KB for the following games
-				if (strncmp(game_TID, "AMH", 3) == 0 )	// Metroid Prime Hunters
-				{
-					savesize = 262144;
-				}
+				int orgsavesize = getFileSize(savepath.c_str());
+				int savesize = 524288; // 512KB (default size for most games)
 
-				// Set save size to 1MB for the following games
-				if (strncmp(game_TID, "AZL", 3) == 0	// Wagamama Fashion: Girls Mode/Style Savvy/Nintendo presents: Style Boutique/Namanui Collection: Girls Style
-				 || strncmp(game_TID, "C6P", 3) == 0	// Picross 3D
-				 || strncmp(game_TID, "BKI", 3) == 0)	// The Legend of Zelda: Spirit Tracks
-				{
-					savesize = 1048576;
-				}
-
-				// Set save size to 8MB for the following games
-				if (strncmp(game_TID, "VAA", 3) == 0	// Art Academy
-				 || strncmp(game_TID, "UXB", 3) == 0)	// Jam with the Band
-				{
-					savesize = 1048576*8;
-				}
-
-				// Set save size to 32MB for the following games
-				if (strncmp(game_TID, "UOR", 3) == 0)	// WarioWare - D.I.Y. (Do It Yourself)
-				{
-					savesize = 1048576*32;
-				}
-
-				FILE *pFile = fopen(savepath.c_str(), "wb");
-				if (pFile) {
-					for (int i = savesize; i > 0; i -= BUFFER_SIZE) {
-						fwrite(buffer, 1, sizeof(buffer), pFile);
+				for (auto i : saveMap) {
+					if (i.second.find(gameTid3) != i.second.cend()) {
+						savesize = i.first;
+						break;
 					}
-					fclose(pFile);
 				}
-				iprintf ("Done!\n");
+
+				bool saveSizeFixNeeded = false;
+
+				// TODO: If the list gets large enough, switch to bsearch().
+				for (unsigned int i = 0; i < sizeof(saveSizeFixList) / sizeof(saveSizeFixList[0]); i++) {
+					if (memcmp(game_TID, saveSizeFixList[i], 3) == 0) {
+						// Found a match.
+						saveSizeFixNeeded = true;
+						break;
+					}
+				}
+
+				if ((orgsavesize == 0 && savesize > 0) || (orgsavesize < savesize && saveSizeFixNeeded)) {
+					consoleDemoInit();
+					iprintf ((orgsavesize == 0) ? "Creating save file...\n" : "Expanding save file...\n");
+					iprintf ("\n");
+					iprintf ("If this takes a while,\n");
+					iprintf ("press HOME, and press B.\n");
+					iprintf ("\n");
+
+					if (orgsavesize > 0) {
+						fsizeincrease(savepath.c_str(), "sd:/temp.sav", savesize);
+					} else {
+						FILE *pFile = fopen(savepath.c_str(), "wb");
+						if (pFile) {
+							fseek(pFile, savesize - 1, SEEK_SET);
+							fputc('\0', pFile);
+							fclose(pFile);
+						}
+					}
+					iprintf ("Done!\n");
+				}
 			}
 
 			int donorSdkVer = 0;
