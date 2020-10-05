@@ -268,7 +268,7 @@ std::string savename;
 std::string romFolderNoSlash;
 std::string savepath;
 
-vector<char*> argarray;
+std::vector<char*> argarray;
 
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv) {
@@ -317,8 +317,10 @@ int main(int argc, char **argv) {
 		game_TID[4] = 0;
 		fclose(f_nds_file);
 
+		argarray.push_back(strdup("NULL"));
+
 		if (isHomebrew == 2) {
-			argarray.push_back(argv[1]);
+			argarray.at(0) = argv[1];
 			int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 			if (!consoleInited) {
 				consoleDemoInit();
@@ -431,7 +433,7 @@ int main(int argc, char **argv) {
 			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
 
 			if (isHomebrew == 1) {
-				argarray.push_back((char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-hb-nightly.nds" : "sd:/_nds/nds-bootstrap-hb-release.nds"));
+				argarray.at(0) = (char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-hb-nightly.nds" : "sd:/_nds/nds-bootstrap-hb-release.nds");
 				int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 				if (!consoleInited) {
 					consoleDemoInit();
@@ -440,7 +442,7 @@ int main(int argc, char **argv) {
 				iprintf("Start failed. Error %i\n", err);
 				if (err == 1) iprintf ("nds-bootstrap (hb) not found.\n");
 			} else {
-				argarray.push_back((char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-nightly.nds" : "sd:/_nds/nds-bootstrap-release.nds"));
+				argarray.at(0) = (char*)(bootstrapFile ? "sd:/_nds/nds-bootstrap-nightly.nds" : "sd:/_nds/nds-bootstrap-release.nds");
 				int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
 				if (!consoleInited) {
 					consoleDemoInit();
