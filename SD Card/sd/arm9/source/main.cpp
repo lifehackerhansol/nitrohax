@@ -261,6 +261,15 @@ std::string ReplaceAll(std::string str, const std::string& from, const std::stri
 }
 
 
+std::string ndsPath;
+std::string romfolder;
+std::string filename;
+std::string savename;
+std::string romFolderNoSlash;
+std::string savepath;
+
+vector<char*> argarray;
+
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
@@ -272,7 +281,7 @@ int main(int argc, char **argv) {
 
 		bootstrapFile = ntrforwarderini.GetInt("NTR-FORWARDER", "BOOTSTRAP_FILE", 0);
 
-		std::string ndsPath = (std::string)argv[1];
+		ndsPath = (std::string)argv[1];
 		/*consoleDemoInit();
 		printf(argv[1]);
 		printf("\n");
@@ -283,13 +292,13 @@ int main(int argc, char **argv) {
 			swiWaitForVBlank();
 		}*/
 
-		std::string romfolder = ndsPath;
+		romfolder = ndsPath;
 		while (!romfolder.empty() && romfolder[romfolder.size()-1] != '/') {
 			romfolder.resize(romfolder.size()-1);
 		}
 		chdir(romfolder.c_str());
 
-		std::string filename = ndsPath;
+		filename = ndsPath;
 		const size_t last_slash_idx = filename.find_last_of("/");
 		if (std::string::npos != last_slash_idx)
 		{
@@ -307,8 +316,6 @@ int main(int argc, char **argv) {
 		grabTID(f_nds_file, game_TID);
 		game_TID[4] = 0;
 		fclose(f_nds_file);
-
-		vector<char*> argarray;
 
 		if (isHomebrew == 2) {
 			argarray.push_back(argv[1]);
@@ -333,10 +340,10 @@ int main(int argc, char **argv) {
 			remove("sd:/_nds/nds-bootstrap/cheatData.bin");
 			remove("sd:/_nds/nds-bootstrap/wideCheatData.bin");
 
-			std::string savename = ReplaceAll(filename, ".nds", ".sav");
-			std::string romFolderNoSlash = romfolder;
+			savename = ReplaceAll(filename, ".nds", ".sav");
+			romFolderNoSlash = romfolder;
 			RemoveTrailingSlashes(romFolderNoSlash);
-			std::string savepath = romFolderNoSlash+"/saves/"+savename;
+			savepath = romFolderNoSlash+"/saves/"+savename;
 
 			if (isHomebrew == 0 && (strncmp(game_TID, "NTR", 3) != 0)) {
 				char gameTid3[5];
