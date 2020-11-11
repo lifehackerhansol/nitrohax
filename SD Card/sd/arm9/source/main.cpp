@@ -276,7 +276,17 @@ int main(int argc, char **argv) {
 
 	defaultExceptionHandler();
 
+	// Cut slot1 power to save battery
+	disableSlot1();
+
 	if (fatInitDefault()) {
+		if (access(argv[1], F_OK) != 0) {
+			consoleDemoInit();
+			iprintf("Not found:\n%s\n\n", argv[1]);
+			iprintf("Please recreate the forwarder\n");
+			iprintf("with the correct ROM path.\n");
+		}
+
 		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
 
 		bootstrapFile = ntrforwarderini.GetInt("NTR-FORWARDER", "BOOTSTRAP_FILE", 0);
