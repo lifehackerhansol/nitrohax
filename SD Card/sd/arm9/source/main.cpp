@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
 			iprintf("Not found:\n%s\n\n", argv[1]);
 			iprintf("Please recreate the forwarder\n");
 			iprintf("with the correct ROM path.\n");
-		}
+		} else {
 
 		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
 
@@ -461,6 +461,7 @@ int main(int argc, char **argv) {
 				iprintf("Start failed. Error %i\n", err);
 				if (err == 1) iprintf ("nds-bootstrap not found.\n");
 			}
+		}
 		}
 	} else {
 		// Subscreen as a console
