@@ -37,7 +37,6 @@
 #include "fileCopy.h"
 
 #include "donorMap.h"
-#include "speedBumpExcludeMap.h"
 #include "saveMap.h"
 
 using namespace std;
@@ -49,7 +48,6 @@ static bool cacheFatTable = false;
 
 static int mpuregion = 0;
 static int mpusize = 0;
-static bool ceCached = true;
 
 static bool bootstrapFile = false;
 
@@ -73,7 +71,7 @@ int SetDonorSDK(const char* filename) {
 	FILE *f_nds_file = fopen(filename, "rb");
 
 	char game_TID[5];
-	fseek(f_nds_file, offsetof(sNDSHeadertitlecodeonly, gameCode), SEEK_SET);
+	fseek(f_nds_file, 0xC, SEEK_SET);
 	fread(game_TID, 1, 4, f_nds_file);
 	game_TID[4] = 0;
 	game_TID[3] = 0;
@@ -97,7 +95,7 @@ void SetMPUSettings(const char* filename) {
 	FILE *f_nds_file = fopen(filename, "rb");
 
 	char game_TID[5];
-	fseek(f_nds_file, offsetof(sNDSHeadertitlecodeonly, gameCode), SEEK_SET);
+	fseek(f_nds_file, 0xC, SEEK_SET);
 	fread(game_TID, 1, 4, f_nds_file);
 	game_TID[4] = 0;
 	game_TID[3] = 0;
@@ -169,60 +167,112 @@ void SetMPUSettings(const char* filename) {
 }
 
 /**
- * Exclude moving nds-bootstrap's cardEngine_arm9 to cached memory region for some games.
- */
-void SetSpeedBumpExclude(const char *filename) {
-	FILE *f_nds_file = fopen(filename, "rb");
-
-	char game_TID[5];
-	fseek(f_nds_file, offsetof(sNDSHeadertitlecodeonly, gameCode), SEEK_SET);
-	fread(game_TID, 1, 4, f_nds_file);
-	fclose(f_nds_file);
-
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(sbeList2)/sizeof(sbeList2[0]); i++) {
-		if (memcmp(game_TID, sbeList2[i], 3) == 0) {
-			// Found match
-			ceCached = false;
-			break;
-		}
-	}
-
-	scanKeys();
-	if(keysHeld() & KEY_L){
-		ceCached = !ceCached;
-	}
-}
-
-/**
  * Fix AP for some games.
  */
 std::string setApFix(const char *filename) {
 	bool useTwlmPath = (access("sd:/_nds/TWiLightMenu/apfix", F_OK) == 0);
 
+	char game_TID[5];
+	u16 headerCRC16 = 0;
+
 	bool ipsFound = false;
+	bool cheatVer = true;
 	char ipsPath[256];
 	snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.ips", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), filename);
 	ipsFound = (access(ipsPath, F_OK) == 0);
+	if (!ipsFound) {
+		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.bin", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), filename);
+		ipsFound = (access(ipsPath, F_OK) == 0);
+	} else {
+		cheatVer = false;
+	}
 
 	if (!ipsFound) {
 		FILE *f_nds_file = fopen(filename, "rb");
 
-		char game_TID[5];
-		u16 headerCRC16 = 0;
-		fseek(f_nds_file, offsetof(sNDSHeader2, gameCode), SEEK_SET);
+		fseek(f_nds_file, offsetof(sNDSHeaderExt, gameCode), SEEK_SET);
 		fread(game_TID, 1, 4, f_nds_file);
-		fseek(f_nds_file, offsetof(sNDSHeader2, headerCRC16), SEEK_SET);
+		fseek(f_nds_file, offsetof(sNDSHeaderExt, headerCRC16), SEEK_SET);
 		fread(&headerCRC16, sizeof(u16), 1, f_nds_file);
 		fclose(f_nds_file);
 		game_TID[4] = 0;
 
 		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.ips", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), game_TID, headerCRC16);
 		ipsFound = (access(ipsPath, F_OK) == 0);
+		if (!ipsFound) {
+			snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.bin", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), game_TID, headerCRC16);
+			ipsFound = (access(ipsPath, F_OK) == 0);
+		} else {
+			cheatVer = false;
+		}
 	}
 
 	if (ipsFound) {
 		return ipsPath;
+	}
+
+	useTwlmPath = (access("sd:/_nds/TWiLightMenu", F_OK) == 0);
+
+	FILE *file = fopen(useTwlmPath ? "sd:/_nds/TWiLightMenu/extras/apfix.pck" : "sd:/_nds/ntr-forwarder/apfix.pck", "rb");
+	if (file) {
+		char buf[5] = {0};
+		fread(buf, 1, 4, file);
+		if (strcmp(buf, ".PCK") != 0) // Invalid file
+			return "";
+
+		u32 fileCount;
+		fread(&fileCount, 1, sizeof(fileCount), file);
+
+		u32 offset = 0, size = 0;
+
+		// Try binary search for the game
+		int left = 0;
+		int right = fileCount;
+
+		while (left <= right) {
+			int mid = left + ((right - left) / 2);
+			fseek(file, 16 + mid * 16, SEEK_SET);
+			fread(buf, 1, 4, file);
+			int cmp = strcmp(buf,  game_TID);
+			if (cmp == 0) { // TID matches, check CRC
+				u16 crc;
+				fread(&crc, 1, sizeof(crc), file);
+
+				if (crc == headerCRC16) { // CRC matches
+					fread(&offset, 1, sizeof(offset), file);
+					fread(&size, 1, sizeof(size), file);
+					cheatVer = fgetc(file) & 1;
+					break;
+				} else if (crc < headerCRC16) {
+					left = mid + 1;
+				} else {
+					right = mid - 1;
+				}
+			} else if (cmp < 0) {
+				left = mid + 1;
+			} else {
+				right = mid - 1;
+			}
+		}
+
+		if (offset > 0 && size > 0) {
+			fseek(file, offset, SEEK_SET);
+			u8 *buffer = new u8[size];
+			fread(buffer, 1, size, file);
+
+			mkdir("sd:/_nds/nds-bootstrap", 0777);
+			snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/nds-bootstrap/apFix%s", cheatVer ? "Cheat.bin" : ".ips");
+			FILE *out = fopen(ipsPath, "wb");
+			if(out) {
+				fwrite(buffer, 1, size, out);
+				fclose(out);
+			}
+			delete[] buffer;
+			fclose(file);
+			return ipsPath;
+		}
+
+		fclose(file);
 	}
 
 	return "";
@@ -322,8 +372,13 @@ int main(int argc, char **argv) {
 			mkdir ("saves", 0777);
 		}
 
-		char game_TID[5];
-		grabTID(f_nds_file, game_TID);
+		char game_TID[5] = {0};
+		u8 unitCode = 0;
+		bool dsiBinariesFound = checkDsiBinaries(f_nds_file);
+		fseek(f_nds_file, 0xC, SEEK_SET);
+		fread(&game_TID, 1, 4, f_nds_file);
+		fseek(f_nds_file, 0x12, SEEK_SET);
+		fread(&unitCode, 1, 1, f_nds_file);
 		game_TID[4] = 0;
 		fclose(f_nds_file);
 
@@ -406,12 +461,31 @@ int main(int argc, char **argv) {
 				}
 			}
 
+			if (isHomebrew == 0 && (unitCode == 2 && !dsiBinariesFound)) {
+				consoleDemoInit();
+				iprintf ("The DSi binaries are missing.\n");
+				iprintf ("Please obtain a clean ROM\n");
+				iprintf ("to replace the current one.\n");
+				iprintf ("\n");
+				iprintf ("Press A to proceed to run in\n");
+				iprintf ("DS mode.\n");
+				while (1) {
+					scanKeys();
+					if (keysDown() & KEY_A) break;
+					swiWaitForVBlank();
+				}
+			}
+
 			int donorSdkVer = 0;
+			bool dsModeForced = false;
 
 			if (isHomebrew == 0) {
+				if (unitCode > 0 && unitCode < 3) {
+					scanKeys();
+					dsModeForced = (keysHeld() & KEY_Y);
+				}
 				donorSdkVer = SetDonorSDK(ndsPath.c_str());
 				SetMPUSettings(ndsPath.c_str());
-				SetSpeedBumpExclude(ndsPath.c_str());
 			}
 
 			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
@@ -419,8 +493,6 @@ int main(int argc, char **argv) {
 			boostCpu = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
 			boostVram = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
 			dsiMode = bootstrapini.GetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
-			if (dsiMode < 0) dsiMode = 0;
-			else if (dsiMode > 2) dsiMode = 2;
 			cacheFatTable = bootstrapini.GetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
 
 			// Write
@@ -432,14 +504,18 @@ int main(int argc, char **argv) {
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
-			//bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
+			if (dsModeForced || unitCode == 0 || (unitCode > 0 && unitCode < 3 && !dsiBinariesFound)) {
+				bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", 0);
+			} else {
+				bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", 1);
+			}
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "CARDENGINE_CACHED", ceCached);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "LANGUAGE", -1);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "REGION", -2);
 			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
 
 			if (isHomebrew == 1) {

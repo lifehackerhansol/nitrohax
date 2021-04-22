@@ -69,10 +69,6 @@ typedef struct {
 
 //#define GBA_HEADER (*(tGBAHeader *)0x08000000)
 
-/*!
-	\brief the NDS file header format
-	See gbatek for more info.
-*/
 typedef struct {
 	char gameTitle[12];			//!< 12 characters for the game title.
 	char gameCode[4];			//!< 4 characters for the game code.
@@ -130,25 +126,41 @@ typedef struct {
 	u32 debugRomDestination;	//!< debug RAM destination.
 	u32 offset_0x16C;			//reserved?
 
-	u8 zero[0x90];
+	u8 zero[0x40];
+	u32 region;
+	u32 accessControl;
+	u32 arm7SCFGSettings;
+	u16 dsi_unk1;
+	u8 dsi_unk2;
+	u8 dsi_flags;
+
+	u32 arm9iromOffset;			//!< offset of the arm9 binary in the nds file.
+	u32 arm9iexecuteAddress;
+	u32 arm9idestination;		//!< destination address to where the arm9 binary should be copied.
+	u32 arm9ibinarySize;		//!< size of the arm9 binary.
+
+	u32 arm7iromOffset;			//!< offset of the arm7 binary in the nds file.
+	u32 deviceListDestination;
+	u32 arm7idestination;		//!< destination address to where the arm7 binary should be copied.
+	u32 arm7ibinarySize;		//!< size of the arm7 binary.
+
+	u8 zero2[0x20];
 
 	// 0x200
 	// TODO: More DSi-specific fields.
 	u8 dsi1[0x30];
 	u32 dsi_tid;
-	u8 dsi2[0x180];
-} sNDSHeader2;
-
-typedef struct {
-	char gameTitle[12];			//!< 12 characters for the game title.
-	char gameCode[4];			//!< 4 characters for the game code.
-} sNDSHeadertitlecodeonly;
+	u32 dsi_tid2;
+	u32 pubSavSize;
+	u32 prvSavSize;
+	u8 dsi2[0x174];
+} sNDSHeaderExt;
 
 
 //#define __NDSHeader ((tNDSHeader *)0x02FFFE00)
 
 // Make sure the banner size is correct.
-static_assert(sizeof(sNDSHeader2) == 0x3B4, "sizeof(sNDSHeader) is not 0x3B4 bytes");
+static_assert(sizeof(sNDSHeaderExt) == 0x3B4, "sizeof(sNDSHeaderExt) is not 0x3B4 bytes");
 
 
 /*!
@@ -170,7 +182,7 @@ typedef struct {
 	u8 dsi_icon[8][512];	//!< DSi animated icon frame data.
 	u16 dsi_palette[8][16];	//!< Palette for each DSi icon frame.
 	u16 dsi_seq[64];	//!< DSi animated icon sequence.
-} sNDSBanner2;
+} sNDSBannerExt;
 
 // sNDSBanner version.
 typedef enum {
@@ -189,7 +201,7 @@ typedef enum {
 } sNDSBannerSize;
 
 // Make sure the banner size is correct.
-static_assert(sizeof(sNDSBanner2) == NDS_BANNER_SIZE_DSi, "sizeof(sNDSBanner2) is not 0x23C0 bytes");
+static_assert(sizeof(sNDSBannerExt) == NDS_BANNER_SIZE_DSi, "sizeof(sNDSBannerExt) is not 0x23C0 bytes");
 
 // Language indexes.
 typedef enum {
@@ -211,13 +223,7 @@ typedef enum {
 	N3DS_LANG_CHINESE_TRADITIONAL	= 11,
 } sNDSLanguage;
 
-/**
- * Get the title ID.
- * @param ndsFile DS ROM image.
- * @param buf Output buffer for title ID. (Must be at least 4 characters.)
- * @return 0 on success; non-zero on error.
- */
-int grabTID(FILE* ndsFile, char *buf);
+bool checkDsiBinaries(FILE* ndsFile);
 
 /**
  * Get SDK version from an NDS file.
@@ -225,7 +231,7 @@ int grabTID(FILE* ndsFile, char *buf);
  * @param filename NDS ROM filename.
  * @return 0 on success; non-zero on error.
  */
-u32 getSDKVersion(FILE* ndsFile);
+//u32 getSDKVersion(FILE* ndsFile);
 
 int checkIfHomebrew(FILE* ndsFile);
 
