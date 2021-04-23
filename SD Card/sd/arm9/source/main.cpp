@@ -46,9 +46,6 @@ static bool boostVram = false;
 static int dsiMode = 0;
 static bool cacheFatTable = false;
 
-static int mpuregion = 0;
-static int mpusize = 0;
-
 static bool bootstrapFile = false;
 
 static bool consoleInited = false;
@@ -86,84 +83,6 @@ int SetDonorSDK(const char* filename) {
 	}
 
 	return 0;
-}
-
-/**
- * Set MPU settings for a specific game.
- */
-void SetMPUSettings(const char* filename) {
-	FILE *f_nds_file = fopen(filename, "rb");
-
-	char game_TID[5];
-	fseek(f_nds_file, 0xC, SEEK_SET);
-	fread(game_TID, 1, 4, f_nds_file);
-	game_TID[4] = 0;
-	game_TID[3] = 0;
-	fclose(f_nds_file);
-
-	scanKeys();
-	int pressed = keysHeld();
-	
-	if(pressed & KEY_B){
-		mpuregion = 1;
-	} else if(pressed & KEY_X){
-		mpuregion = 2;
-	} else if(pressed & KEY_R){
-		mpuregion = 3;
-	} else {
-		mpuregion = 0;
-	}
-	if(pressed & KEY_RIGHT){
-		mpusize = 3145728;
-	} else if(pressed & KEY_LEFT){
-		mpusize = 1;
-	} else {
-		mpusize = 0;
-	}
-
-	// Check for games that need an MPU size of 3 MB.
-	static const char mpu_3MB_list[][4] = {
-	    "AQC", // Crayon Shin-chan DS - Arashi o Yobu Nutte Crayoon Daisakusen!
-	    "YRC", // Crayon Shin-chan - Arashi o Yobu Cinemaland Kachinko Gachinko Daikatsugeki!
-	    "CL4", // Crayon Shin-Chan - Arashi o Yobu Nendororoon Daihenshin!
-	    "BQB", // Crayon Shin-chan - Obaka Dainin Den - Susume! Kasukabe Ninja Tai!
-	    "YD8", // Doraemon - Nobita to Midori no Kyojinden DS
-		"A7A",	// DS Download Station - Vol 1
-		"A7B",	// DS Download Station - Vol 2
-		"A7C",	// DS Download Station - Vol 3
-		"A7D",	// DS Download Station - Vol 4
-		"A7E",	// DS Download Station - Vol 5
-		"A7F",	// DS Download Station - Vol 6 (EUR)
-		"A7G",	// DS Download Station - Vol 6 (USA)
-		"A7H",	// DS Download Station - Vol 7
-		"A7I",	// DS Download Station - Vol 8
-		"A7J",	// DS Download Station - Vol 9
-		"A7K",	// DS Download Station - Vol 10
-		"A7L",	// DS Download Station - Vol 11
-		"A7M",	// DS Download Station - Vol 12
-		"A7N",	// DS Download Station - Vol 13
-		"A7O",	// DS Download Station - Vol 14
-		"A7P",	// DS Download Station - Vol 15
-		"A7Q",	// DS Download Station - Vol 16
-		"A7R",	// DS Download Station - Vol 17
-		"A7S",	// DS Download Station - Vol 18
-		"A7T",	// DS Download Station - Vol 19
-		"AK4", // Kabu Trader Shun
-		"ARZ",	// Rockman ZX/MegaMan ZX
-		"YZX",	// Rockman ZX Advent/MegaMan ZX Advent
-		"B6Z",	// Rockman Zero Collection/MegaMan Zero Collection
-		"A2D",	// New Super Mario Bros.
-	};
-
-	// TODO: If the list gets large enough, switch to bsearch().
-	for (unsigned int i = 0; i < sizeof(mpu_3MB_list)/sizeof(mpu_3MB_list[0]); i++) {
-		if (memcmp(game_TID, mpu_3MB_list[i], 3) == 0) {
-			// Found a match.
-			mpuregion = 1;
-			mpusize = 3145728;
-			break;
-		}
-	}
 }
 
 /**
@@ -485,7 +404,6 @@ int main(int argc, char **argv) {
 					dsModeForced = (keysHeld() & KEY_Y);
 				}
 				donorSdkVer = SetDonorSDK(ndsPath.c_str());
-				SetMPUSettings(ndsPath.c_str());
 			}
 
 			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
@@ -511,8 +429,8 @@ int main(int argc, char **argv) {
 			}
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", mpuregion);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", mpusize);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", 0);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", 0);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "LANGUAGE", -1);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "REGION", -2);
