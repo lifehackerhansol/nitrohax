@@ -1,28 +1,8 @@
-/*-----------------------------------------------------------------
- Copyright (C) 2005 - 2013
-	Michael "Chishm" Chisholm
-	Dave "WinterMute" Murphy
-	Claudio "sverx"
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-------------------------------------------------------------------*/
 #include <nds.h>
 #include <nds/fifocommon.h>
 #include <stdio.h>
 #include <fat.h>
+#include "fat_ext.h"
 #include <sys/stat.h>
 #include <limits.h>
 #include <nds/disc_io.h>
@@ -32,12 +12,15 @@
 
 #include "ndsheaderbanner.h"
 #include "nds_loader_arm9.h"
+#include "nitrofs.h"
+#include "tonccpy.h"
 
 #include "inifile.h"
 #include "fileCopy.h"
 
 #include "donorMap.h"
 #include "saveMap.h"
+#include "ROMList.h"
 
 using namespace std;
 
@@ -49,6 +32,14 @@ static bool cacheFatTable = false;
 static bool bootstrapFile = false;
 
 static bool consoleInited = false;
+
+bool extention(const std::string& filename, const char* ext) {
+	if(strcasecmp(filename.c_str() + filename.size() - strlen(ext), ext)) {
+		return false;
+	} else {
+		return true;
+	}
+}
 
 /**
  * Remove trailing slashes from a pathname, if present.
@@ -89,7 +80,7 @@ int SetDonorSDK(const char* filename) {
  * Fix AP for some games.
  */
 std::string setApFix(const char *filename) {
-	bool useTwlmPath = (access("sd:/_nds/TWiLightMenu/apfix", F_OK) == 0);
+	bool useTwlmPath = (access("sd:/_nds/TWiLightMenu/extras/apfix.pck", F_OK) == 0);
 
 	char game_TID[5];
 	u16 headerCRC16 = 0;
@@ -97,10 +88,10 @@ std::string setApFix(const char *filename) {
 	bool ipsFound = false;
 	bool cheatVer = true;
 	char ipsPath[256];
-	snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.ips", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), filename);
+	snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.ips", (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), filename);
 	ipsFound = (access(ipsPath, F_OK) == 0);
 	if (!ipsFound) {
-		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.bin", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), filename);
+		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.bin", (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), filename);
 		ipsFound = (access(ipsPath, F_OK) == 0);
 	} else {
 		cheatVer = false;
@@ -116,10 +107,10 @@ std::string setApFix(const char *filename) {
 		fclose(f_nds_file);
 		game_TID[4] = 0;
 
-		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.ips", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), game_TID, headerCRC16);
+		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.ips", (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), game_TID, headerCRC16);
 		ipsFound = (access(ipsPath, F_OK) == 0);
 		if (!ipsFound) {
-			snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.bin", (useTwlmPath ? "TWiLightMenu" : "ntr-forwarder"), game_TID, headerCRC16);
+			snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.bin", (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), game_TID, headerCRC16);
 			ipsFound = (access(ipsPath, F_OK) == 0);
 		} else {
 			cheatVer = false;
@@ -255,6 +246,7 @@ int main(int argc, char **argv) {
 			iprintf("Please recreate the forwarder\n");
 			iprintf("with the correct ROM path.\n");
 		} else {
+		nitroFSInit(argv[0]);
 
 		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
 
@@ -285,21 +277,25 @@ int main(int argc, char **argv) {
 		}
 
 		FILE *f_nds_file = fopen(filename.c_str(), "rb");
+		bool dsiBinariesFound = checkDsiBinaries(f_nds_file);
 		int isHomebrew = checkIfHomebrew(f_nds_file);
+		bool isDSiWare = false;
 
 		if (isHomebrew == 0) {
 			mkdir ("saves", 0777);
 		}
 
-		char game_TID[5] = {0};
-		u8 unitCode = 0;
-		bool dsiBinariesFound = checkDsiBinaries(f_nds_file);
-		fseek(f_nds_file, 0xC, SEEK_SET);
-		fread(&game_TID, 1, 4, f_nds_file);
-		fseek(f_nds_file, 0x12, SEEK_SET);
-		fread(&unitCode, 1, 1, f_nds_file);
-		game_TID[4] = 0;
 		fclose(f_nds_file);
+
+		extern sNDSHeaderExt ndsHeader;
+
+		if ((ndsHeader.gameCode[0] == 0x48 && ndsHeader.makercode[0] != 0 && ndsHeader.makercode[1] != 0)
+		 || (ndsHeader.gameCode[0] == 0x4B && ndsHeader.makercode[0] != 0 && ndsHeader.makercode[1] != 0)
+		 || (ndsHeader.gameCode[0] == 0x5A && ndsHeader.makercode[0] != 0 && ndsHeader.makercode[1] != 0)
+		 || (ndsHeader.gameCode[0] == 0x42 && ndsHeader.gameCode[1] == 0x38 && ndsHeader.gameCode[2] == 0x38))
+		{ if (ndsHeader.unitCode != 0)
+			isDSiWare = true; // Is a DSiWare game
+		}
 
 		argarray.push_back(strdup("NULL"));
 
@@ -326,23 +322,103 @@ int main(int argc, char **argv) {
 			remove("sd:/_nds/nds-bootstrap/cheatData.bin");
 			remove("sd:/_nds/nds-bootstrap/wideCheatData.bin");
 
-			savename = ReplaceAll(filename, ".nds", ".sav");
+			const char *typeToReplace = ".nds";
+			if (extention(filename, ".dsi")) {
+				typeToReplace = ".dsi";
+			} else if (extention(filename, ".ids")) {
+				typeToReplace = ".ids";
+			} else if (extention(filename, ".srl")) {
+				typeToReplace = ".srl";
+			} else if (extention(filename, ".app")) {
+				typeToReplace = ".app";
+			}
+
+			savename = ReplaceAll(filename, typeToReplace, ".sav");
 			romFolderNoSlash = romfolder;
 			RemoveTrailingSlashes(romFolderNoSlash);
 			savepath = romFolderNoSlash+"/saves/"+savename;
 
-			if (isHomebrew == 0 && (strncmp(game_TID, "NTR", 3) != 0)) {
-				char gameTid3[5];
-				for (int i = 0; i < 3; i++) {
-					gameTid3[i] = game_TID[i];
+			std::string dsiWareSrlPath = ndsPath;
+			std::string dsiWarePubPath = ReplaceAll(ndsPath, typeToReplace, ".pub");
+			std::string dsiWarePrvPath = ReplaceAll(ndsPath, typeToReplace, ".prv");
+
+			if (isDSiWare) {
+				if ((getFileSize(dsiWarePubPath.c_str()) == 0) && (ndsHeader.pubSavSize > 0)) {
+					consoleDemoInit();
+					iprintf("Creating public save file...\n");
+					iprintf ("\n");
+					iprintf ("If this takes a while,\n");
+					iprintf ("press HOME, and press B.\n");
+					iprintf ("\n");
+
+					static const int BUFFER_SIZE = 4096;
+					char buffer[BUFFER_SIZE];
+					toncset(buffer, 0, sizeof(buffer));
+					char savHdrPath[64];
+					snprintf(savHdrPath, sizeof(savHdrPath), "nitro:/DSiWareSaveHeaders/%x.savhdr",
+						 (unsigned int)ndsHeader.pubSavSize);
+					FILE *hdrFile = fopen(savHdrPath, "rb");
+					if (hdrFile)
+						fread(buffer, 1, 0x200, hdrFile);
+					fclose(hdrFile);
+
+					FILE *pFile = fopen(dsiWarePubPath.c_str(), "wb");
+					if (pFile) {
+						fwrite(buffer, 1, sizeof(buffer), pFile);
+						fseek(pFile, ndsHeader.pubSavSize - 1, SEEK_SET);
+						fputc('\0', pFile);
+						fclose(pFile);
+					}
+					iprintf("Public save file created!\n");
+
+					for (int i = 0; i < 30; i++) {
+						swiWaitForVBlank();
+					}
 				}
 
-				int orgsavesize = getFileSize(savepath.c_str());
-				int savesize = 524288; // 512KB (default size for most games)
+				if ((getFileSize(dsiWarePrvPath.c_str()) == 0) && (ndsHeader.prvSavSize > 0)) {
+					consoleDemoInit();
+					iprintf("Creating private save file...\n");
+					iprintf ("\n");
+					iprintf ("If this takes a while,\n");
+					iprintf ("press HOME, and press B.\n");
+					iprintf ("\n");
 
-				for (auto i : saveMap) {
-					if (i.second.find(gameTid3) != i.second.cend()) {
-						savesize = i.first;
+					static const int BUFFER_SIZE = 4096;
+					char buffer[BUFFER_SIZE];
+					toncset(buffer, 0, sizeof(buffer));
+					char savHdrPath[64];
+					snprintf(savHdrPath, sizeof(savHdrPath), "nitro:/DSiWareSaveHeaders/%x.savhdr",
+						 (unsigned int)ndsHeader.prvSavSize);
+					FILE *hdrFile = fopen(savHdrPath, "rb");
+					if (hdrFile)
+						fread(buffer, 1, 0x200, hdrFile);
+					fclose(hdrFile);
+
+					FILE *pFile = fopen(dsiWarePrvPath.c_str(), "wb");
+					if (pFile) {
+						fwrite(buffer, 1, sizeof(buffer), pFile);
+						fseek(pFile, ndsHeader.prvSavSize - 1, SEEK_SET);
+						fputc('\0', pFile);
+						fclose(pFile);
+					}
+					iprintf("Private save file created!\n");
+
+					for (int i = 0; i < 30; i++) {
+						swiWaitForVBlank();
+					}
+				}
+			} else if (isHomebrew == 0 && (strncmp(ndsHeader.gameCode, "NTR", 3) != 0)) {
+				u32 orgsavesize = getFileSize(savepath.c_str());
+				u32 savesize = 524288; // 512KB (default size for most games)
+
+				u32 gameTidHex = 0;
+				tonccpy(&gameTidHex, &ndsHeader.gameCode, 4);
+
+				for (int i = 0; i < (int)sizeof(ROMList)/12; i++) {
+					ROMListEntry* curentry = &ROMList[i];
+					if (gameTidHex == curentry->GameCode) {
+						if (curentry->SaveMemType != 0xFFFFFFFF) savesize = sramlen[curentry->SaveMemType];
 						break;
 					}
 				}
@@ -351,7 +427,7 @@ int main(int argc, char **argv) {
 
 				// TODO: If the list gets large enough, switch to bsearch().
 				for (unsigned int i = 0; i < sizeof(saveSizeFixList) / sizeof(saveSizeFixList[0]); i++) {
-					if (memcmp(game_TID, saveSizeFixList[i], 3) == 0) {
+					if (memcmp(ndsHeader.gameCode, saveSizeFixList[i], 3) == 0) {
 						// Found a match.
 						saveSizeFixNeeded = true;
 						break;
@@ -377,10 +453,14 @@ int main(int argc, char **argv) {
 						}
 					}
 					iprintf ("Done!\n");
+
+					for (int i = 0; i < 30; i++) {
+						swiWaitForVBlank();
+					}
 				}
 			}
 
-			if (isHomebrew == 0 && (unitCode == 2 && !dsiBinariesFound)) {
+			if (isHomebrew == 0 && (ndsHeader.unitCode == 2 && !dsiBinariesFound)) {
 				consoleDemoInit();
 				iprintf ("The DSi binaries are missing.\n");
 				iprintf ("Please obtain a clean ROM\n");
@@ -399,11 +479,20 @@ int main(int argc, char **argv) {
 			bool dsModeForced = false;
 
 			if (isHomebrew == 0) {
-				if (unitCode > 0 && unitCode < 3) {
+				if (ndsHeader.unitCode > 0 && ndsHeader.unitCode < 3) {
 					scanKeys();
 					dsModeForced = (keysHeld() & KEY_Y);
 				}
 				donorSdkVer = SetDonorSDK(ndsPath.c_str());
+			}
+
+			char sfnSrl[62];
+			char sfnPub[62];
+			char sfnPrv[62];
+			if (isDSiWare) {
+				fatGetAliasPath("sd:/", dsiWareSrlPath.c_str(), sfnSrl);
+				fatGetAliasPath("sd:/", dsiWarePubPath.c_str(), sfnPub);
+				fatGetAliasPath("sd:/", dsiWarePrvPath.c_str(), sfnPrv);
 			}
 
 			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
@@ -415,14 +504,20 @@ int main(int argc, char **argv) {
 
 			// Write
 			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
-			bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
+			if (isDSiWare) {
+				bootstrapini.SetString("NDS-BOOTSTRAP", "APP_PATH", sfnSrl);
+				bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", sfnPub);
+				bootstrapini.SetString("NDS-BOOTSTRAP", "PRV_PATH", sfnPrv);
+			} else {
+				bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
+			}
 			if (isHomebrew == 0) {
-				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", setApFix(filename.c_str()));
+				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", isDSiWare ? "" : setApFix(filename.c_str()));
 			}
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
-			if (dsModeForced || unitCode == 0 || (unitCode > 0 && unitCode < 3 && !dsiBinariesFound)) {
+			if (dsModeForced || ndsHeader.unitCode == 0 || (ndsHeader.unitCode > 0 && ndsHeader.unitCode < 3 && !dsiBinariesFound)) {
 				bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", 0);
 			} else {
 				bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", 1);

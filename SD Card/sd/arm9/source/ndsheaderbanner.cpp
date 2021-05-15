@@ -6,7 +6,7 @@
 #include "ndsheaderbanner.h"
 
 static u32 arm9Sig[3][4];
-static sNDSHeaderExt ndsHeader;
+sNDSHeaderExt ndsHeader;
 
 // Subroutine function signatures arm9
 u32 moduleParamsSignature[2]   = {0xDEC00621, 0x2106C0DE};
