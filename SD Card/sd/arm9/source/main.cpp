@@ -230,6 +230,17 @@ std::string savepath;
 
 std::vector<char*> argarray;
 
+static inline void takeWhileMsg() {
+	#ifdef DSI
+	iprintf ("If this takes a while, close\n");
+	iprintf ("and open the console's lid.\n");
+	#else
+	iprintf ("If this takes a while,\n");
+	iprintf ("press HOME, and press B.\n");
+	#endif
+	iprintf ("\n");
+}
+
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
@@ -347,9 +358,7 @@ int main(int argc, char **argv) {
 					consoleDemoInit();
 					iprintf("Creating public save file...\n");
 					iprintf ("\n");
-					iprintf ("If this takes a while,\n");
-					iprintf ("press HOME, and press B.\n");
-					iprintf ("\n");
+					takeWhileMsg();
 
 					static const int BUFFER_SIZE = 4096;
 					char buffer[BUFFER_SIZE];
@@ -380,9 +389,7 @@ int main(int argc, char **argv) {
 					consoleDemoInit();
 					iprintf("Creating private save file...\n");
 					iprintf ("\n");
-					iprintf ("If this takes a while,\n");
-					iprintf ("press HOME, and press B.\n");
-					iprintf ("\n");
+					takeWhileMsg();
 
 					static const int BUFFER_SIZE = 4096;
 					char buffer[BUFFER_SIZE];
@@ -438,9 +445,7 @@ int main(int argc, char **argv) {
 					consoleDemoInit();
 					iprintf ((orgsavesize == 0) ? "Creating save file...\n" : "Expanding save file...\n");
 					iprintf ("\n");
-					iprintf ("If this takes a while,\n");
-					iprintf ("press HOME, and press B.\n");
-					iprintf ("\n");
+					takeWhileMsg();
 
 					if (orgsavesize > 0) {
 						fsizeincrease(savepath.c_str(), "sd:/temp.sav", savesize);
@@ -526,7 +531,11 @@ int main(int argc, char **argv) {
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", 0);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", 0);
+			#ifdef DSI
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 0);
+			#else
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
+			#endif
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "LANGUAGE", -1);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "REGION", -2);
 			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
@@ -563,7 +572,11 @@ int main(int argc, char **argv) {
 
 	iprintf ("\n");		
 	iprintf ("Press B to return to\n");
-	iprintf ("HOME Menu.\n");		
+	#ifdef DSI
+	iprintf ("DSi Menu.\n");
+	#else
+	iprintf ("HOME Menu.\n");
+	#endif
 
 	while (1) {
 		scanKeys();
