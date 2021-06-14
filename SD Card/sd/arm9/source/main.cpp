@@ -27,6 +27,8 @@ using namespace std;
 static bool boostCpu = false;
 static bool boostVram = false;
 static int dsiMode = 0;
+static int language = -1;
+static int region = -2;
 static bool cacheFatTable = false;
 
 static bool bootstrapFile = false;
@@ -506,6 +508,8 @@ int main(int argc, char **argv) {
 			boostVram = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
 			dsiMode = bootstrapini.GetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
 			cacheFatTable = bootstrapini.GetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
+			language = bootstrapini.GetInt("NDS-BOOTSTRAP", "LANGUAGE", language);
+			region = bootstrapini.GetInt("NDS-BOOTSTRAP", "REGION", region);
 
 			// Write
 			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
@@ -536,8 +540,8 @@ int main(int argc, char **argv) {
 			#else
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
 			#endif
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "LANGUAGE", -1);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "REGION", -2);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "LANGUAGE", language);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "REGION", region);
 			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
 
 			if (isHomebrew == 1) {
