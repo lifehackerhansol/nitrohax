@@ -10,6 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "defines.h"
 #include "ndsheaderbanner.h"
 #include "nds_loader_arm9.h"
 #include "nitrofs.h"
@@ -18,6 +19,8 @@
 #include "inifile.h"
 #include "fileCopy.h"
 
+#include "twlClockExcludeMap.h"
+#include "dmaExcludeMap.h"
 #include "donorMap.h"
 #include "saveMap.h"
 #include "ROMList.h"
@@ -52,6 +55,73 @@ void RemoveTrailingSlashes(std::string& path)
 	while (!path.empty() && path[path.size()-1] == '/') {
 		path.resize(path.size()-1);
 	}
+}
+
+/**
+ * Disable TWL clock speed for a specific game.
+ */
+bool setClockSpeed(const char* filename) {
+	//if (perGameSettings_boostCpu == -1) {
+		FILE *f_nds_file = fopen(filename, "rb");
+
+		char game_TID[5];
+		fseek(f_nds_file, 0xC, SEEK_SET);
+		fread(game_TID, 1, 4, f_nds_file);
+		game_TID[4] = 0;
+		fclose(f_nds_file);
+
+		// TODO: If the list gets large enough, switch to bsearch().
+		for (unsigned int i = 0; i < sizeof(twlClockExcludeList)/sizeof(twlClockExcludeList[0]); i++) {
+			if (memcmp(game_TID, twlClockExcludeList[i], 3) == 0) {
+				// Found match
+				return false;
+			}
+		}
+	//}
+
+	return true;
+}
+
+/**
+ * Disable card read DMA for a specific game.
+ */
+bool setCardReadDMA(const char* filename) {
+	scanKeys();
+	if(keysHeld() & KEY_L) {
+		return false;
+	}
+
+	//if (perGameSettings_cardReadDMA == -1) {
+		FILE *f_nds_file = fopen(filename, "rb");
+
+		char game_TID[5];
+		fseek(f_nds_file, 0xC, SEEK_SET);
+		fread(game_TID, 1, 4, f_nds_file);
+		game_TID[4] = 0;
+		fclose(f_nds_file);
+
+		// TODO: If the list gets large enough, switch to bsearch().
+		for (unsigned int i = 0; i < sizeof(cardReadDMAExcludeList)/sizeof(cardReadDMAExcludeList[0]); i++) {
+			if (memcmp(game_TID, cardReadDMAExcludeList[i], 3) == 0) {
+				// Found match
+				return false;
+			}
+		}
+	//}
+
+	return true;
+}
+
+/**
+ * Disable asynch card read for a specific game.
+ */
+bool setAsyncCardRead(const char* filename) {
+	scanKeys();
+	if(keysHeld() & KEY_R) {
+		return true;
+	}
+
+	return false;
 }
 
 /**
@@ -352,8 +422,8 @@ int main(int argc, char **argv) {
 			savepath = romFolderNoSlash+"/saves/"+savename;
 
 			std::string dsiWareSrlPath = ndsPath;
-			std::string dsiWarePubPath = ReplaceAll(ndsPath, typeToReplace, ".pub");
-			std::string dsiWarePrvPath = ReplaceAll(ndsPath, typeToReplace, ".prv");
+			std::string dsiWarePubPath = ReplaceAll(savepath, ".sav", ".pub");
+			std::string dsiWarePrvPath = ReplaceAll(savepath, ".sav", ".prv");
 
 			if (isDSiWare) {
 				if ((getFileSize(dsiWarePubPath.c_str()) == 0) && (ndsHeader.pubSavSize > 0)) {
@@ -524,8 +594,10 @@ int main(int argc, char **argv) {
 				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", isDSiWare ? "" : setApFix(filename.c_str()));
 			}
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
-			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", setClockSpeed(filename.c_str()));
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "CARD_READ_DMA", setCardReadDMA(filename.c_str()));
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "ASYNC_CARD_READ", setAsyncCardRead(filename.c_str()));
 			if (dsModeForced || ndsHeader.unitCode == 0 || (ndsHeader.unitCode > 0 && ndsHeader.unitCode < 3 && !dsiBinariesFound)) {
 				bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", 0);
 			} else {
