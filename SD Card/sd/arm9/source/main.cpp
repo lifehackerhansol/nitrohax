@@ -10,7 +10,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "defines.h"
 #include "ndsheaderbanner.h"
 #include "nds_loader_arm9.h"
 #include "nitrofs.h"
@@ -322,6 +321,14 @@ int main(int argc, char **argv) {
 	// Cut slot1 power to save battery
 	disableSlot1();
 
+	*(vu32*)0x0DFFFE0C = 0x23232323;
+	bool debugRam = (*(vu32*)0x0DFFFE0C == 0x23232323);
+
+	int consoleModel = 0; // 0: Retail DSi
+	if (debugRam) {
+		consoleModel = fifoGetValue32(FIFO_USER_05) == 0xD2 ? 1 : 2; // 1: Panda DSi, 2: 3DS/2DS
+	}
+
 	if (fatInitDefault()) {
 		if (access(argv[1], F_OK) != 0) {
 			consoleDemoInit();
@@ -607,11 +614,7 @@ int main(int argc, char **argv) {
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "DONOR_SDK_VER", donorSdkVer);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_REGION", 0);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "PATCH_MPU_SIZE", 0);
-			#ifdef DSI
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 0);
-			#else
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", 2);
-			#endif
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", consoleModel);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "LANGUAGE", language);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "REGION", region);
 			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
@@ -648,11 +651,7 @@ int main(int argc, char **argv) {
 
 	iprintf ("\n");		
 	iprintf ("Press B to return to\n");
-	#ifdef DSI
-	iprintf ("DSi Menu.\n");
-	#else
-	iprintf ("HOME Menu.\n");
-	#endif
+	iprintf (consoleModel >= 2 ? "HOME Menu.\n" : "DSi Menu.\n");
 
 	while (1) {
 		scanKeys();
