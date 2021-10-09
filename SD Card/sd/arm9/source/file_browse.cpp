@@ -251,7 +251,7 @@ void browseForFile (const vector<string_view> extensionList, string* donorRomPat
 				char path[PATH_MAX];
 				getcwd(path, PATH_MAX);
 				char donorPath[PATH_MAX];
-				sprintf(donorPath, "%s/%s", path, entry->name.c_str());
+				sprintf(donorPath, "%s%s", path, entry->name.c_str());
 
 				if (entry->secondaryDonor) {
 					*donorRomPath2 = donorPath;
