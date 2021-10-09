@@ -233,6 +233,7 @@ bool checkDsiBinaries(FILE* ndsFile);
  */
 //u32 getSDKVersion(FILE* ndsFile);
 
+extern int requiresDonorRom;
 int checkIfHomebrew(FILE* ndsFile);
 
 #endif // NDS_HEADER2

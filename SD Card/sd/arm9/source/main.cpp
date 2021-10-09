@@ -15,6 +15,7 @@
 #include "nitrofs.h"
 #include "tonccpy.h"
 
+#include "file_browse.h"
 #include "inifile.h"
 #include "fileCopy.h"
 
@@ -509,32 +510,17 @@ int main(int argc, char **argv) {
 					}
 				}
 
-				bool saveSizeFixNeeded = false;
-
-				// TODO: If the list gets large enough, switch to bsearch().
-				for (unsigned int i = 0; i < sizeof(saveSizeFixList) / sizeof(saveSizeFixList[0]); i++) {
-					if (memcmp(ndsHeader.gameCode, saveSizeFixList[i], 3) == 0) {
-						// Found a match.
-						saveSizeFixNeeded = true;
-						break;
-					}
-				}
-
-				if ((orgsavesize == 0 && savesize > 0) || (orgsavesize < savesize && saveSizeFixNeeded)) {
+				if ((orgsavesize == 0 && savesize > 0) || (orgsavesize < savesize)) {
 					consoleDemoInit();
 					iprintf ((orgsavesize == 0) ? "Creating save file...\n" : "Expanding save file...\n");
 					iprintf ("\n");
 					takeWhileMsg();
 
-					if (orgsavesize > 0) {
-						fsizeincrease(savepath.c_str(), "sd:/temp.sav", savesize);
-					} else {
-						FILE *pFile = fopen(savepath.c_str(), "wb");
-						if (pFile) {
-							fseek(pFile, savesize - 1, SEEK_SET);
-							fputc('\0', pFile);
-							fclose(pFile);
-						}
+					FILE *pFile = fopen(savepath.c_str(), orgsavesize > 0 ? "r+" : "wb");
+					if (pFile) {
+						fseek(pFile, savesize - 1, SEEK_SET);
+						fputc('\0', pFile);
+						fclose(pFile);
 					}
 					iprintf ("Done!\n");
 
@@ -544,26 +530,80 @@ int main(int argc, char **argv) {
 				}
 			}
 
-			if (isHomebrew == 0 && (ndsHeader.unitCode == 2 && !dsiBinariesFound)) {
-				consoleDemoInit();
-				iprintf ("The DSi binaries are missing.\n");
-				iprintf ("Please obtain a clean ROM\n");
-				iprintf ("to replace the current one.\n");
-				iprintf ("\n");
-				iprintf ("Press A to proceed to run in\n");
-				iprintf ("DS mode.\n");
-				while (1) {
-					scanKeys();
-					if (keysDown() & KEY_A) break;
-					swiWaitForVBlank();
-				}
-			}
+			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
 
 			int donorSdkVer = 0;
 			bool dsModeForced = false;
+			std::string donorRomPath[3];
+			donorRomPath[0] = bootstrapini.GetString("NDS-BOOTSTRAP", "DONOR2_NDS_PATH", "");
+			donorRomPath[1] = bootstrapini.GetString("NDS-BOOTSTRAP", "DONORTWL_NDS_PATH", "");
+			donorRomPath[2] = bootstrapini.GetString("NDS-BOOTSTRAP", "DONORTWLONLY_NDS_PATH", "");
 
 			if (isHomebrew == 0) {
-				if (ndsHeader.unitCode > 0 && ndsHeader.unitCode < 3) {
+				if (ndsHeader.unitCode == 2 && !dsiBinariesFound) {
+					consoleDemoInit();
+					iprintf ("The DSi binaries are missing.\n");
+					iprintf ("Please obtain a clean ROM\n");
+					iprintf ("to replace the current one.\n");
+					iprintf ("\n");
+					iprintf ("Press A to proceed to run in\n");
+					iprintf ("DS mode.\n");
+					while (1) {
+						scanKeys();
+						if (keysDown() & KEY_A) {
+							dsModeForced = true;
+							break;
+						}
+						swiWaitForVBlank();
+					}
+				} else if (requiresDonorRom == 53) {
+					if (((donorRomPath[1] == "" && donorRomPath[2] == "") || (access(donorRomPath[1].c_str(), F_OK) != 0 && access(donorRomPath[2].c_str(), F_OK) != 0))) {
+						consoleDemoInit();
+						iprintf ("DSi mode for the launched\n");
+						iprintf ("title requires a donor ROM.\n");
+						iprintf ("Please find a TWL-type title\n");
+						iprintf ("to set as a donor ROM.\n");
+						iprintf ("\n");
+						iprintf ("Press A to continue, or\n");
+						iprintf ("press Y to proceed to run in\n");
+						iprintf ("DS mode.\n");
+						while (1) {
+							scanKeys();
+							if (keysDown() & KEY_A) {
+								iprintf ("\x1b[2J");
+								browseForFile({".nds", ".dsi", ".ids", ".srl", ".app"}, &donorRomPath[1], &donorRomPath[2]);
+								break;
+							}
+							if (keysDown() & KEY_Y) {
+								dsModeForced = true;
+								break;
+							}
+							swiWaitForVBlank();
+						}
+					}
+				} else if (requiresDonorRom == 2) {
+					if (donorRomPath[0] == "" || access(donorRomPath[0].c_str(), F_OK) != 0) {
+						consoleDemoInit();
+						iprintf ("The launched title requires a\n");
+						iprintf ("donor ROM. Please find an SDK2\n");
+						iprintf ("game to set as a donor ROM.\n");
+						iprintf ("\n");
+						iprintf ("Press A to continue.\n");
+						while (1) {
+							scanKeys();
+							if (keysDown() & KEY_A) {
+								iprintf ("\x1b[2J");
+								browseForFile({".nds", ".dsi", ".ids", ".srl", ".app"}, &donorRomPath[0], &donorRomPath[0]);
+								break;
+							}
+							swiWaitForVBlank();
+						}
+					}
+				}
+			}
+
+			if (isHomebrew == 0) {
+				if (ndsHeader.unitCode > 0 && ndsHeader.unitCode < 3 && !dsModeForced) {
 					scanKeys();
 					dsModeForced = (keysHeld() & KEY_Y);
 				}
@@ -579,7 +619,6 @@ int main(int argc, char **argv) {
 				fatGetAliasPath("sd:/", dsiWarePrvPath.c_str(), sfnPrv);
 			}
 
-			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
 			// Fix weird bug where some settings would be cleared
 			boostCpu = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
 			boostVram = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
@@ -598,6 +637,15 @@ int main(int argc, char **argv) {
 				bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
 			}
 			if (isHomebrew == 0) {
+				if (donorRomPath[0] != "") {
+					bootstrapini.SetString("NDS-BOOTSTRAP", "DONOR2_NDS_PATH", donorRomPath[0].c_str());
+				}
+				if (donorRomPath[1] != "") {
+					bootstrapini.SetString("NDS-BOOTSTRAP", "DONORTWL_NDS_PATH", donorRomPath[1].c_str());
+				}
+				if (donorRomPath[2] != "") {
+					bootstrapini.SetString("NDS-BOOTSTRAP", "DONORTWLONLY_NDS_PATH", donorRomPath[2].c_str());
+				}
 				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", isDSiWare ? "" : setApFix(filename.c_str()));
 			}
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
@@ -605,7 +653,7 @@ int main(int argc, char **argv) {
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CARD_READ_DMA", setCardReadDMA(filename.c_str()));
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "ASYNC_CARD_READ", setAsyncCardRead(filename.c_str()));
-			if (dsModeForced || ndsHeader.unitCode == 0 || (ndsHeader.unitCode > 0 && ndsHeader.unitCode < 3 && !dsiBinariesFound)) {
+			if (dsModeForced || ndsHeader.unitCode == 0) {
 				bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", 0);
 			} else {
 				bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", 1);
