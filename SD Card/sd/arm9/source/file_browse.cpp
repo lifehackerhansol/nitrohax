@@ -29,6 +29,7 @@
 #include <dirent.h>
 
 #include <nds.h>
+#include "ndsheaderbanner.h"
 
 #define SCREEN_COLS 32
 #define ENTRIES_PER_SCREEN 22
@@ -92,12 +93,12 @@ void getDirectoryContents (vector<DirEntry>& dirContents, const vector<string_vi
 				if (pent->d_type == DT_DIR) {
 					dirContents.emplace_back(pent->d_name, pent->d_type == DT_DIR, false);
 				} else if (nameEndsWith(pent->d_name, extensionList)) {
-					extern int requiresDonorRom;
 					u32 arm7size = 0;
 
 					FILE* file = fopen(pent->d_name, "rb");
 					fseek(file, 0x3C, SEEK_SET);
 					fread(&arm7size, sizeof(u32), 1, file);
+					bool dsiBinariesFound = checkDsiBinaries(file);
 					fclose(file);
 
 					bool showFile = false;
@@ -105,7 +106,7 @@ void getDirectoryContents (vector<DirEntry>& dirContents, const vector<string_vi
 					if (requiresDonorRom == 53) {
 						showFile =
 							// DSi-Enhanced
-							(arm7size==0x28F84
+							(((arm7size==0x28F84
 						  || arm7size==0x2909C
 						  || arm7size==0x2914C
 						  || arm7size==0x29164
@@ -115,7 +116,7 @@ void getDirectoryContents (vector<DirEntry>& dirContents, const vector<string_vi
 						  || arm7size==0x2AF18
 						  || arm7size==0x2B184
 						  || arm7size==0x2B24C
-						  || arm7size==0x2C5B4
+						  || arm7size==0x2C5B4) && dsiBinariesFound)
 							// DSi-Exclusive/DSiWare
 						  || arm7size==0x25664
 						  || arm7size==0x257DC
