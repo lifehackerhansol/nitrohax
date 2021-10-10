@@ -534,10 +534,9 @@ int main(int argc, char **argv) {
 
 			int donorSdkVer = 0;
 			bool dsModeForced = false;
-			std::string donorRomPath[3];
-			donorRomPath[0] = bootstrapini.GetString("NDS-BOOTSTRAP", "DONOR2_NDS_PATH", "");
-			donorRomPath[1] = bootstrapini.GetString("NDS-BOOTSTRAP", "DONORTWL_NDS_PATH", "");
-			donorRomPath[2] = bootstrapini.GetString("NDS-BOOTSTRAP", "DONORTWLONLY_NDS_PATH", "");
+			std::string donorRomPath[2];
+			donorRomPath[0] = bootstrapini.GetString("NDS-BOOTSTRAP", "DONORTWL_NDS_PATH", "");
+			donorRomPath[1] = bootstrapini.GetString("NDS-BOOTSTRAP", "DONORTWLONLY_NDS_PATH", "");
 
 			if (isHomebrew == 0) {
 				if (ndsHeader.unitCode == 2 && !dsiBinariesFound) {
@@ -557,7 +556,7 @@ int main(int argc, char **argv) {
 						swiWaitForVBlank();
 					}
 				} else if (requiresDonorRom == 53) {
-					if (((donorRomPath[1] == "" && donorRomPath[2] == "") || (access(donorRomPath[1].c_str(), F_OK) != 0 && access(donorRomPath[2].c_str(), F_OK) != 0))) {
+					if (((donorRomPath[0] == "" && donorRomPath[1] == "") || (access(donorRomPath[0].c_str(), F_OK) != 0 && access(donorRomPath[1].c_str(), F_OK) != 0))) {
 						consoleDemoInit();
 						iprintf ("DSi mode for the launched\n");
 						iprintf ("title requires a donor ROM.\n");
@@ -571,29 +570,11 @@ int main(int argc, char **argv) {
 							scanKeys();
 							if (keysDown() & KEY_A) {
 								iprintf ("\x1b[2J");
-								browseForFile({".nds", ".dsi", ".ids", ".srl", ".app"}, &donorRomPath[1], &donorRomPath[2]);
+								browseForFile({".nds", ".dsi", ".ids", ".srl", ".app"}, &donorRomPath[0], &donorRomPath[1]);
 								break;
 							}
 							if (keysDown() & KEY_Y) {
 								dsModeForced = true;
-								break;
-							}
-							swiWaitForVBlank();
-						}
-					}
-				} else if (requiresDonorRom == 2) {
-					if (donorRomPath[0] == "" || access(donorRomPath[0].c_str(), F_OK) != 0) {
-						consoleDemoInit();
-						iprintf ("The launched title requires a\n");
-						iprintf ("donor ROM. Please find an SDK2\n");
-						iprintf ("game to set as a donor ROM.\n");
-						iprintf ("\n");
-						iprintf ("Press A to continue.\n");
-						while (1) {
-							scanKeys();
-							if (keysDown() & KEY_A) {
-								iprintf ("\x1b[2J");
-								browseForFile({".nds", ".dsi", ".ids", ".srl", ".app"}, &donorRomPath[0], &donorRomPath[0]);
 								break;
 							}
 							swiWaitForVBlank();
@@ -638,13 +619,10 @@ int main(int argc, char **argv) {
 			}
 			if (isHomebrew == 0) {
 				if (donorRomPath[0] != "") {
-					bootstrapini.SetString("NDS-BOOTSTRAP", "DONOR2_NDS_PATH", donorRomPath[0].c_str());
+					bootstrapini.SetString("NDS-BOOTSTRAP", "DONORTWL_NDS_PATH", donorRomPath[0].c_str());
 				}
 				if (donorRomPath[1] != "") {
-					bootstrapini.SetString("NDS-BOOTSTRAP", "DONORTWL_NDS_PATH", donorRomPath[1].c_str());
-				}
-				if (donorRomPath[2] != "") {
-					bootstrapini.SetString("NDS-BOOTSTRAP", "DONORTWLONLY_NDS_PATH", donorRomPath[2].c_str());
+					bootstrapini.SetString("NDS-BOOTSTRAP", "DONORTWLONLY_NDS_PATH", donorRomPath[1].c_str());
 				}
 				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", isDSiWare ? "" : setApFix(filename.c_str()));
 			}

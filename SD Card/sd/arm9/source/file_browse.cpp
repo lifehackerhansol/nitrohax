@@ -103,7 +103,7 @@ void getDirectoryContents (vector<DirEntry>& dirContents, const vector<string_vi
 
 					bool showFile = false;
 					bool secondaryDonor = false;
-					if (requiresDonorRom == 53) {
+					//if (requiresDonorRom == 53) {
 						showFile =
 							// DSi-Enhanced
 							(((arm7size==0x28F84
@@ -134,9 +134,7 @@ void getDirectoryContents (vector<DirEntry>& dirContents, const vector<string_vi
 						  || arm7size==0x26D10
 						  || arm7size==0x26D50
 						  || arm7size==0x26DF4);
-					} else if (requiresDonorRom == 2) { // SDK2
-						showFile = (arm7size==0x26F24 || arm7size==0x26F28);
-					}
+					//}
 
 					if (showFile) {
 						dirContents.emplace_back(pent->d_name, pent->d_type == DT_DIR, secondaryDonor);

@@ -132,10 +132,6 @@ int checkIfHomebrew(FILE* ndsFile) {
 		case 0x22BCC:
 			requiresDonorRom = 53; // TWL-type ROM required
 			break;
-		case 0x24DA8:
-		case 0x24F50:
-			requiresDonorRom = 2; // Late SDK2 ROM required
-			break;
 		default:
 			break;
 	}
