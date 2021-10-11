@@ -322,8 +322,8 @@ int main(int argc, char **argv) {
 	// Cut slot1 power to save battery
 	disableSlot1();
 
-	*(vu32*)0x0DFFFE0C = 0x23232323;
-	bool debugRam = (*(vu32*)0x0DFFFE0C == 0x23232323);
+	*(vu32*)0x0DFFFE0C = 0x4652544E;
+	bool debugRam = (*(vu32*)0x0DFFFE0C == 0x4652544E);
 
 	int consoleModel = 0; // 0: Retail DSi
 	if (debugRam) {
