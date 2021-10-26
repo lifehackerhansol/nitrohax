@@ -6,7 +6,6 @@
 #include "ndsheaderbanner.h"
 
 static u32 arm9Sig[3][4];
-int requiresDonorRom = 0;
 sNDSHeaderExt ndsHeader;
 sNDSHeaderExt ndsHeaderBinaryCheck;
 
@@ -126,15 +125,6 @@ int checkIfHomebrew(FILE* ndsFile) {
 
 	fseek(ndsFile, 0, SEEK_SET);
 	fread(&ndsHeader, 1, sizeof(ndsHeader), ndsFile);
-
-	switch (ndsHeader.arm7binarySize) {
-		case 0x22B40:
-		case 0x22BCC:
-			requiresDonorRom = 53; // TWL-type ROM required
-			break;
-		default:
-			break;
-	}
 
 	fseek(ndsFile, (ndsHeader.arm9romOffset <= 0x200 ? ndsHeader.arm9romOffset : ndsHeader.arm9romOffset+0x800), SEEK_SET);
 	fread(arm9Sig[0], sizeof(u32), 4, ndsFile);
