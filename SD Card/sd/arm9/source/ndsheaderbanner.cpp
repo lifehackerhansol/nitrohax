@@ -126,7 +126,7 @@ int checkIfHomebrew(FILE* ndsFile) {
 	fseek(ndsFile, 0, SEEK_SET);
 	fread(&ndsHeader, 1, sizeof(ndsHeader), ndsFile);
 
-	fseek(ndsFile, (ndsHeader.arm9romOffset <= 0x200 ? ndsHeader.arm9romOffset : ndsHeader.arm9romOffset+0x800), SEEK_SET);
+	fseek(ndsFile, ndsHeader.arm9romOffset + ndsHeader.arm9executeAddress - ndsHeader.arm9destination, SEEK_SET);
 	fread(arm9Sig[0], sizeof(u32), 4, ndsFile);
 	if (arm9Sig[0][0] == 0xE3A00301
 	 && arm9Sig[0][1] == 0xE5800208
