@@ -27,9 +27,6 @@
 
 using namespace std;
 
-static bool boostCpu = false;
-static bool boostVram = false;
-static int dsiMode = 0;
 static int language = -1;
 static int region = -2;
 static bool cacheFatTable = false;
@@ -565,10 +562,6 @@ int main(int argc, char **argv) {
 			}
 
 			if (isHomebrew == 0) {
-				if (ndsHeader.unitCode > 0 && ndsHeader.unitCode < 3 && !dsModeForced) {
-					scanKeys();
-					dsModeForced = (keysHeld() & KEY_Y);
-				}
 				donorSdkVer = SetDonorSDK(ndsPath.c_str());
 			}
 
@@ -582,12 +575,7 @@ int main(int argc, char **argv) {
 			}
 
 			// Fix weird bug where some settings would be cleared
-			boostCpu = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_CPU", boostCpu);
-			boostVram = bootstrapini.GetInt("NDS-BOOTSTRAP", "BOOST_VRAM", boostVram);
-			dsiMode = bootstrapini.GetInt("NDS-BOOTSTRAP", "DSI_MODE", dsiMode);
 			cacheFatTable = bootstrapini.GetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
-			language = bootstrapini.GetInt("NDS-BOOTSTRAP", "LANGUAGE", language);
-			region = bootstrapini.GetInt("NDS-BOOTSTRAP", "REGION", region);
 
 			// Write
 			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
@@ -602,11 +590,11 @@ int main(int argc, char **argv) {
 				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", isDSiWare ? "" : setApFix(filename.c_str()));
 			}
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", gameSettings.boostCpu == -1 ? setClockSpeed(filename.c_str()) : gameSettings.boostCpu);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", gameSettings.boostVram == -1 ? boostVram : gameSettings.boostVram);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "CARD_READ_DMA", gameSettings.cardReadDMA == -1 ? setCardReadDMA(filename.c_str()) : gameSettings.cardReadDMA);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "ASYNC_CARD_READ", gameSettings.asyncCardRead == -1 ? setAsyncCardRead(filename.c_str()) : gameSettings.asyncCardRead);
-			bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", dsModeForced ? 0 : (gameSettings.dsiMode == -1 ? dsiMode : gameSettings.dsiMode));
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", gameSettings.boostCpu == -1 ? false : gameSettings.boostCpu);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_VRAM", gameSettings.boostVram == -1 ? false : gameSettings.boostVram);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "CARD_READ_DMA", gameSettings.cardReadDMA == -1 ? true : gameSettings.cardReadDMA);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "ASYNC_CARD_READ", gameSettings.asyncCardRead == -1 ? false : gameSettings.asyncCardRead);
+			bootstrapini.SetInt("NDS-BOOTSTRAP", "DSI_MODE", dsModeForced ? 0 : (gameSettings.dsiMode == -1 ? true : gameSettings.dsiMode));
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "SWI_HALT_HOOK", gameSettings.swiHaltHook == -1 ? true : gameSettings.swiHaltHook);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "EXTENDED_MEMORY", gameSettings.expandRomSpace == -1 ? false : gameSettings.expandRomSpace);
 			//bootstrapini.SetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
