@@ -285,23 +285,23 @@ std::string setApFix(const char *filename) {
 void setAutoload(const char *resetTid) {
 	u8 *autoloadParams = (u8 *)0x02000300;
 
-	*((u32 *)autoloadParams) = 0x434E4C54; // 'TLNC'
-	autoloadParams[4] = 0x01;
-	autoloadParams[5] = 0x18; // Length of data
+	toncset32(autoloadParams, 0x434E4C54, 1); // 'TLNC'
+	toncset(autoloadParams+4, 0x01, 1);
+	toncset(autoloadParams+5, 0x18, 1); // Length of data
 
 	// Old TID, can be 0
-	memset(autoloadParams + 8, 0, 8);
+	toncset(autoloadParams + 8, 0, 8);
 
 	// New TID
-	memcpy(autoloadParams + 16, resetTid, 4);
-	*((u32 *)(autoloadParams + 20)) = 0x00030000 | resetTid[4];
+	tonccpy(autoloadParams + 16, resetTid, 4);
+	toncset32(((u32 *)(autoloadParams + 20)), 0x00030000 | resetTid[4], 1);
 
-	*((u32 *)(autoloadParams + 24)) = 0x00000017; // Flags
-	*((u32 *)(autoloadParams + 28)) = 0x00000000;
+	toncset32(((u32 *)(autoloadParams + 24)), 0x00000017, 1); // Flags
+	toncset32(((u32 *)(autoloadParams + 28)), 0x00000000, 1);
 
 	// CRC16
 	u16 crc16 = swiCRC16(0xFFFF, autoloadParams + 8, 0x18);
-	memcpy(autoloadParams + 6, &crc16, 2);
+	tonccpy(autoloadParams + 6, &crc16, 2);
 }
 
 /**
@@ -591,12 +591,26 @@ int main(int argc, char **argv) {
 		} else {
 			mkdir ("sd:/_nds/nds-bootstrap", 0777);
 
-			FILE *headerFile = fopen("sd:/_nds/ntr-forwarder/header.bin", "rb");
-			FILE *srBackendFile = fopen("sd:/_nds/nds-bootstrap/srBackendId.bin", "wb");
-			fread(__DSiHeader, 1, 0x1000, headerFile);
-			fwrite((char*)__DSiHeader+0x230, sizeof(u32), 2, srBackendFile);
-			fclose(headerFile);
-			fclose(srBackendFile);
+			if (argc >= 3) {
+				u32 autoloadParams[2] = {0};
+				memcpy(autoloadParams, argv[2], 4);
+				autoloadParams[1] = 0x00030000 | argv[2][4];
+
+				FILE *srBackendFile = fopen("sd:/_nds/nds-bootstrap/srBackendId.bin", "wb");
+				fwrite(autoloadParams, sizeof(u32), 2, srBackendFile);
+				fclose(srBackendFile);
+			} else {
+				FILE *headerFile = fopen("sd:/_nds/ntr-forwarder/header.bin", "rb");
+				if (headerFile) {
+					FILE *srBackendFile = fopen("sd:/_nds/nds-bootstrap/srBackendId.bin", "wb");
+					fread(__DSiHeader, 1, 0x1000, headerFile);
+					fwrite((char*)__DSiHeader+0x230, sizeof(u32), 2, srBackendFile);
+					fclose(srBackendFile);
+					fclose(headerFile);
+				} else if (access("sd:/_nds/nds-bootstrap/srBackendId.bin", F_OK) == 0) {
+					remove("sd:/_nds/nds-bootstrap/srBackendId.bin");
+				}
+			}
 
 			// Delete cheat data
 			remove("sd:/_nds/nds-bootstrap/cheatData.bin");

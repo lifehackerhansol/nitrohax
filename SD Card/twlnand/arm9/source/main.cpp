@@ -46,10 +46,6 @@ void stop (void) {
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
 	if (fatInitDefault()) {
-		FILE* headerFile = fopen("sd:/_nds/ntr-forwarder/header.bin", "wb");
-		fwrite(__DSiHeader, 1, 0x1000, headerFile);
-		fclose(headerFile);
-
 		const char *ndsPath = "sd:/<<<Start NDS Path                                                                                                                                                                                                                            End NDS Path>>>";
 
 		char titleId[6];
