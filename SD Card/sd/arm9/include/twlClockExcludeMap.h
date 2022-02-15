@@ -2,8 +2,9 @@
 #define TWLCLOCKEXCLUDEMAP_H
 
 static const char twlClockExcludeList[][4] = {
+	"YAA", // Arkanoid DS
 	"CRL", // Coraline
-	"CLP", // Club Pengion: Elite Penguin Force
+	"CLP", // Club Penguin: Elite Penguin Force
 	"CY9", // Club Penguin: EPF: Herbert's Revenge
 	"ATD", // Clubhouse Games
 	"YGD", // Diary Girl
@@ -13,7 +14,7 @@ static const char twlClockExcludeList[][4] = {
 	"AWI", // Hotel Dusk: Room 215
 	"C6C", // Infinite Space
 	"YLU", // Last Window: The Secret of Cape West
-	"YJB", // LEGO Batman
+	"YJB", // LEGO Batman: The Videogame
 	"B6F", // LEGO Batman 2: DC Super Heroes
 	"CS5", // LEGO Battles
 	"TLJ", // LEGO Friends
@@ -29,6 +30,7 @@ static const char twlClockExcludeList[][4] = {
 	"AL7", // LEGO Star Wars II: The Original Trilogy
 	"YLG", // LEGO Star Wars: The Complete Saga
 	"BL9", // LEGO Star Wars III: The Clone Wars
+	"YNN", // Magician's Quest: Mysterious Times
 	"AY9", // Mario & Sonic at the Olympic Games
 	"BZP", // Peppa Pig: Theme Park Fun
 	"AQW", // Puzzle Quest: Challenge of the Warlords
@@ -36,6 +38,7 @@ static const char twlClockExcludeList[][4] = {
 	"ASC", // Sonic Rush
 	"ASM", // Super Mario 64 DS
 	"COZ", // The Wizard of Oz: Beyond the Yellow Brick Road
+	"CY8", // Yu-Gi-Oh! 5D's Stardust Accelerator: World Championship 2009
 };
 
 #endif // TWLCLOCKEXCLUDEMAP_H
