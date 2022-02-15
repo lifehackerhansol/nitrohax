@@ -24,7 +24,6 @@ GameSettings::GameSettings(const std::string &fileName, const std::string &fileP
 	boostVram = ini.GetInt("GAMESETTINGS", "BOOST_VRAM", boostVram);
 	cardReadDMA = ini.GetInt("GAMESETTINGS", "CARD_READ_DMA", cardReadDMA);
 	asyncCardRead = ini.GetInt("GAMESETTINGS", "ASYNC_CARD_READ", asyncCardRead);
-	swiHaltHook = ini.GetInt("GAMESETTINGS", "SWI_HALT_HOOK", swiHaltHook);
 	expandRomSpace = ini.GetInt("GAMESETTINGS", "EXTENDED_MEMORY", expandRomSpace);
 	bootstrapFile = ini.GetInt("GAMESETTINGS", "BOOTSTRAP_FILE", bootstrapFile);
 	widescreen = ini.GetInt("GAMESETTINGS", "WIDESCREEN", widescreen);
@@ -39,7 +38,6 @@ void GameSettings::save() {
 	ini.SetInt("GAMESETTINGS", "BOOST_VRAM", boostVram);
 	ini.SetInt("GAMESETTINGS", "CARD_READ_DMA", cardReadDMA);
 	ini.SetInt("GAMESETTINGS", "ASYNC_CARD_READ", asyncCardRead);
-	ini.SetInt("GAMESETTINGS", "SWI_HALT_HOOK", swiHaltHook);
 	ini.SetInt("GAMESETTINGS", "EXTENDED_MEMORY", expandRomSpace);
 	ini.SetInt("GAMESETTINGS", "BOOTSTRAP_FILE", bootstrapFile);
 	ini.SetInt("GAMESETTINGS", "WIDESCREEN", widescreen);
@@ -60,7 +58,7 @@ void GameSettings::menu() {
 
 	u16 held;
 	int cursorPosition = 0;
-	int numOptions = consoleModel == 2 ? 11 : 10;
+	int numOptions = consoleModel == 2 ? 10 : 9;
 	while(1) {
 		consoleClear();
 		iprintf("ntr-forwarder\n\n");
@@ -72,7 +70,6 @@ void GameSettings::menu() {
 		iprintf("  VRAM Mode: %s\n", vramLabels[boostVram + 1]);
 		iprintf("  Card Read DMA: %s\n", offOnLabels[cardReadDMA + 1]);
 		iprintf("  Async Card Read: %s\n", offOnLabels[asyncCardRead + 1]);
-		iprintf("  SWI Halt Hook: %s\n", offOnLabels[swiHaltHook + 1]);
 		iprintf("  Expand ROM in RAM: %s\n", expandLabels[expandRomSpace + 1]);
 		iprintf("  Bootstrap File: %s\n", bootstrapLabels[bootstrapFile + 1]);
 		if(consoleModel == 2)
@@ -132,18 +129,14 @@ void GameSettings::menu() {
 					if(asyncCardRead < -1) asyncCardRead = 1;
 					break;
 				case 8:
-					swiHaltHook--;
-					if(swiHaltHook < -1) swiHaltHook = 1;
-					break;
-				case 9:
 					expandRomSpace--;
 					if(expandRomSpace < -1) expandRomSpace = 2;
 					break;
-				case 10:
+				case 9:
 					bootstrapFile--;
 					if(bootstrapFile < -1) bootstrapFile = 1;
 					break;
-				case 11:
+				case 10:
 					widescreen--;
 					if(widescreen < -1) widescreen = 1;
 					break;
@@ -183,18 +176,14 @@ void GameSettings::menu() {
 					if(asyncCardRead > 1) asyncCardRead = -1;
 					break;
 				case 8:
-					swiHaltHook++;
-					if(swiHaltHook > 1) swiHaltHook = -1;
-					break;
-				case 9:
 					expandRomSpace++;
 					if(expandRomSpace > 2) expandRomSpace = -1;
 					break;
-				case 10:
+				case 9:
 					bootstrapFile++;
 					if(bootstrapFile > 1) bootstrapFile = -1;
 					break;
-				case 11:
+				case 10:
 					widescreen++;
 					if(widescreen > 1) widescreen = -1;
 					break;
