@@ -2,8 +2,11 @@ BootLoader/build
 BootLoader/load.bin
 arm7/build
 arm9/build/
-arm9/data/
+arm9/data/load.bin
 arm9/source/version.h
 *.nds
 *.dsi
+*.cia
 *.elf
+*.DS_Store
+*._

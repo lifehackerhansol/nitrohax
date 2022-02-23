@@ -26,7 +26,7 @@
 #include <list>
 
 #include "cheat.h"
-#include "bootsplash.h"
+#include "bootsplash/bootsplash.h"
 #include "ui.h"
 #include "cheat_engine.h"
 #include "crc.h"
