@@ -2,7 +2,10 @@ Nitro Hax
 =========
 
 By Chishm
-Modified to work on Nintendo 3DS by Apache Thunder, Ahezard, and Shutterbug2000.
+
+Modified to work on Nintendo DSi or 3DS by Apache Thunder, Ahezard, and Shutterbug2000.
+
+Modified to use a usrcheat.dat database by Pk11.
 
 Nitro Hax is a cheat tool for the Nintendo DS.
 It works with original games only.
@@ -16,37 +19,40 @@ The newest release is available to
 [download](https://www.chishm.com/NitroHax/NitroHax.zip) from the
 [Nitro Hax web page](https://www.chishm.com/NitroHax/index.html).
 
-Usage (revised for 3DS. Do NOT attempt to use this build on a original DS/DS Lite. Use Chishm's original build instead)
+Usage (revised for DSi/3DS. Do NOT attempt to use this build on a original DS/DS Lite. Use Chishm's original build instead)
 =====
 
-1. Install NitroHax.cia with your preferred CIA installer.
-2. Place an Action Replay XML file (cheats.xml) to a location on your 3DS SD card.
+1. Install `NitroHax-usrcheat.cia` with your preferred CIA installer or copy `NitroHax.dsi` to your SD card.
+2. Place a `usrcheat.dat` file on your DSi/3DS SD card.
 3. Insert the game you intend to use NitroHax with.
-4. Start NitroHax from 3DS Home Menu. If you did not insert a game yet, the program will prompt you to insert one.
-  1. One of the following will be loaded automatically if it is found (in order of preference):
-    * "cheats.xml" in the current directory
-    * "/NitroHax/cheats.xml"
-    * "/data/NitroHax/cheats.xml"
-    * "/cheats.xml"
-  2. If no file is found, browse for and select a file to open.
+4. Start NitroHax from 3DS Home Menu, TWiLight Menu++, or however else you run homebrew. If you did not insert a game yet, the program will prompt you to insert one.
+   1. One of the following will be loaded automatically if it is found (in order of preference):
+      * `usrcheat.dat` (in the current directory)
+      * `/DS/NitroHax/usrcheat.dat`
+      * `/NitroHax/usrcheat.dat`
+      * `/data/NitroHax/usrcheat.dat`
+      * `/usrcheat.dat`
+      * `/_nds/usrcheat.dat`
+      * `/_nds/TWiLightMenu/extras/usrcheat.dat` (this is the same place TWiLight Menu++ uses)
+   2. If no file is found, browse for and select a file to open.
 5. Choose the cheats you want to enable.
-  1. Some cheats are enabled by default and others may be always on. This is specified in the XML file.
-  2. The keys are:
-    * **A**: Open a folder or toggle a cheat enabled
-    * **B**: Go up a folder or exit the cheat menu if at the top level
-    * **X**: Enable all cheats in current folder
-    * **Y**: Disable all cheats in current folder
-    * **L**: Move up half a screen
-    * **R**: Move down half a screen
-    * **Up**: Move up one line
-    * **Down**: Move down one line
-    * **Start**: Start the game
-	* **Select**: Enable DSi clock speeds. (currently no visible GUI button for this yet)
-6. If you wish to enable TWL clock speeds for your game press select button. This option added to help improve performance of some games.
-7. Do NOT eject the game cartridge once cheats have been loaded. If you change your mind, you will need to restart Nitrohax.
-8. When you're done, exit the cheat menu by pressing the start button.
+   1. Some cheats are enabled by default and others may be always on. This is specified in the usrcheat.dat file.
+   2. The keys are:
+      * <kbd>A</kbd>: Open a folder or toggle a cheat enabled
+      * <kbd>B</kbd>: Go up a folder or exit the cheat menu if at the top level
+      * <kbd>X</kbd>: Enable all cheats in current folder
+      * <kbd>Y</kbd>: Disable all cheats in current folder
+      * <kbd>L</kbd>: Move up half a screen
+      * <kbd>R</kbd>: Move down half a screen
+      * <kbd>Up</kbd>: Move up one line
+      * <kbd>Down</kbd>: Move down one line
+      * <kbd>START</kbd>: Start the game
+      * <kbd>SELECT</kbd>: Enable DSi clock speeds. (currently no visible GUI button for this yet)
+6. If you wish to enable TWL clock speeds for your game press <kbd>SELECT</kbd> button. This option can help improve performance of some games.
+7. Do NOT eject the game cartridge once cheats have been loaded. If you change your mind, you will need to restart NitroHax.
+8. When you're done, exit the cheat menu by pressing the <kbd>START</kbd> button.
 9. The game will then start with cheats running.
-10.The DS/DSi bootsplash played prior to starting the game will indicate what CPU speed was selected for your game.
+10. The DS/DSi bootsplash played prior to starting the game will indicate what CPU speed was selected for your game.
 
 
 Copyright
