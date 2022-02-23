@@ -10,9 +10,12 @@ include $(DEVKITARM)/ds_rules
 export TARGET		:=	NitroHax
 export TOPDIR		:=	$(CURDIR)
 
-export VERSION_MAJOR	:= 0
-export VERSION_MINOR	:= 100
-export VERSTRING	:=	$(VERSION_MAJOR).$(VERSION_MINOR)
+# If on a tagged commit, use just tag
+ifneq ($(shell echo $(shell git tag -l --points-at HEAD) | head -c 1),)
+VERSTRING := $(shell git tag -l --points-at HEAD)
+else
+VERSTRING := $(shell git describe --abbrev=0 --tags)-$(shell git rev-parse --short=7 HEAD)
+endif
 
 
 .PHONY: checkarm7 checkarm9
@@ -50,7 +53,7 @@ arm9/source/version.h : Makefile
 	@echo "#ifndef VERSION_H" > $@
 	@echo "#define VERSION_H" >> $@
 	@echo >> $@
-	@echo '#define VERSION_STRING "v'$(VERSION_MAJOR).$(VERSION_MINOR)'"' >> $@
+	@echo '#define VERSION_STRING "v'$(VERSTRING)'"' >> $@
 	@echo >> $@
 	@echo "#endif // VERSION_H" >> $@
 
