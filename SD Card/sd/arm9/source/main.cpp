@@ -286,18 +286,18 @@ void setAutoload(const char *resetTid) {
 	u8 *autoloadParams = (u8 *)0x02000300;
 
 	toncset32(autoloadParams, 0x434E4C54, 1); // 'TLNC'
-	toncset(autoloadParams+4, 0x01, 1);
-	toncset(autoloadParams+5, 0x18, 1); // Length of data
+	((vu8 *)autoloadParams)[4] = 0x01;
+	((vu8 *)autoloadParams)[5] = 0x18; // Length of data
 
 	// Old TID, can be 0
 	toncset(autoloadParams + 8, 0, 8);
 
 	// New TID
 	tonccpy(autoloadParams + 16, resetTid, 4);
-	toncset32(((u32 *)(autoloadParams + 20)), 0x00030000 | resetTid[4], 1);
+	toncset32(autoloadParams + 20, 0x00030000 | resetTid[4], 1);
 
-	toncset32(((u32 *)(autoloadParams + 24)), 0x00000017, 1); // Flags
-	toncset32(((u32 *)(autoloadParams + 28)), 0x00000000, 1);
+	toncset32(autoloadParams + 24, 0x00000017, 1); // Flags
+	toncset32(autoloadParams + 28, 0x00000000, 1);
 
 	// CRC16
 	u16 crc16 = swiCRC16(0xFFFF, autoloadParams + 8, 0x18);
@@ -317,7 +317,8 @@ void SetWidescreen(const char *filename, bool isHomebrew, const char *resetTid) 
 		if (access("sd:/luma/sysmodules/TwlBg.cxi", F_OK) == 0) {
 			rename("sd:/luma/sysmodules/TwlBg.cxi", "sd:/_nds/ntr-forwarder/TwlBg.cxi.bak");
 		}
-		if (rename("sd:/_nds/TWiLightMenu/TwlBg/Widescreen.cxi", "sd:/luma/sysmodules/TwlBg.cxi") == 0) {
+		if (rename("sd:/_nds/TWiLightMenu/TwlBg/Widescreen.cxi", "sd:/luma/sysmodules/TwlBg.cxi") == 0
+		 || rename("sd:/_nds/ntr-forwarder/Widescreen.cxi", "sd:/luma/sysmodules/TwlBg.cxi") == 0) {
 			CIniFile ntrforwarderini("sd:/_nds/ntr_forwarder.ini");
 			ntrforwarderini.SetInt("NTR-FORWARDER", "WIDESCREEN_LOADED", true);
 			ntrforwarderini.SaveIniFile("sd:/_nds/ntr_forwarder.ini");
@@ -423,11 +424,12 @@ void SetWidescreen(const char *filename, bool isHomebrew, const char *resetTid) 
 			fclose(file);
 		}
 	}
-	if (wideCheatFound && (access("sd:/_nds/TWiLightMenu/TwlBg/Widescreen.cxi", F_OK) == 0)) {
+	if (wideCheatFound && (access("sd:/_nds/TWiLightMenu/TwlBg/Widescreen.cxi", F_OK) == 0 || access("sd:/_nds/ntr-forwarder/Widescreen.cxi", F_OK) == 0)) {
 		if (access("sd:/luma/sysmodules/TwlBg.cxi", F_OK) == 0) {
-			rename("sd:/luma/sysmodules/TwlBg.cxi", "sd:/_nds/TWiLightMenu/TwlBg/TwlBg.cxi.bak");
+			rename("sd:/luma/sysmodules/TwlBg.cxi", (useTwlmPath ? "sd:/_nds/TWiLightMenu/TwlBg/TwlBg.cxi.bak" : "sd:/_nds/ntr-forwarder/TwlBg.cxi.bak"));
 		}
-		if (rename("sd:/_nds/TWiLightMenu/TwlBg/Widescreen.cxi", "sd:/luma/sysmodules/TwlBg.cxi") == 0) {
+		if (rename("sd:/_nds/TWiLightMenu/TwlBg/Widescreen.cxi", "sd:/luma/sysmodules/TwlBg.cxi") == 0
+		 || rename("sd:/_nds/ntr-forwarder/Widescreen.cxi", "sd:/luma/sysmodules/TwlBg.cxi") == 0) {
 			CIniFile ntrforwarderini("sd:/_nds/ntr_forwarder.ini");
 			ntrforwarderini.SetInt("NTR-FORWARDER", "WIDESCREEN_LOADED", true);
 			ntrforwarderini.SaveIniFile("sd:/_nds/ntr_forwarder.ini");
@@ -456,8 +458,8 @@ void UnsetWidescreen() {
 		iprintf("back to Widescreen.cxi\n");
 		for (int i = 0; i < 60*3; i++) swiWaitForVBlank();
 	}
-	if (access("sd:/_nds/ntr-forwarder/TwlBg.cxi.bak", F_OK) == 0) {
-		rename("sd:/_nds/ntr-forwarder/TwlBg.cxi.bak", "sd:/luma/sysmodules/TwlBg.cxi");
+	if (access(useTwlmPath ? "sd:/_nds/TWiLightMenu/TwlBg/TwlBg.cxi.bak" : "sd:/_nds/ntr-forwarder/TwlBg.cxi.bak", F_OK) == 0) {
+		rename(useTwlmPath ? "sd:/_nds/TWiLightMenu/TwlBg/TwlBg.cxi.bak" : "sd:/_nds/ntr-forwarder/TwlBg.cxi.bak", "sd:/luma/sysmodules/TwlBg.cxi");
 	}
 }
 
