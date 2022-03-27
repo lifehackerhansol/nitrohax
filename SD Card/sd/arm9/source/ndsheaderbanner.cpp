@@ -56,7 +56,8 @@ bool checkDsiBinaries(FILE* ndsFile) {
 	fseek(ndsFile, 0, SEEK_SET);
 	fread(&ndsHeaderBinaryCheck, 1, sizeof(ndsHeaderBinaryCheck), ndsFile);
 
-	if (ndsHeaderBinaryCheck.arm9iromOffset == 0 || ndsHeaderBinaryCheck.arm7iromOffset == 0) {
+	if (ndsHeaderBinaryCheck.arm9iromOffset < 0x8000 || ndsHeaderBinaryCheck.arm9iromOffset >= 0x20000000
+	 || ndsHeaderBinaryCheck.arm7iromOffset < 0x8000 || ndsHeaderBinaryCheck.arm7iromOffset >= 0x20000000) {
 		return false;
 	}
 
