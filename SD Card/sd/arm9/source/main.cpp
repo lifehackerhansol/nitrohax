@@ -740,7 +740,7 @@ int main(int argc, char **argv) {
 			int donorSdkVer = 0;
 			bool dsModeForced = false;
 
-			if (isHomebrew == 0 && ndsHeader.unitCode == 2 && !dsiBinariesFound) {
+			if (isHomebrew == 0 && ndsHeader.unitCode == 2 && !dsiBinariesFound && gameSettings.dsiMode != 0) {
 				consoleDemoInit();
 				iprintf ("The DSi binaries are missing.\n");
 				iprintf ("Please obtain a clean ROM\n");
