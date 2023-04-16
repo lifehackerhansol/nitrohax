@@ -287,7 +287,7 @@ void SetWidescreen(const char *filename, bool isHomebrew, const char *resetTid, 
 	mkdir("sd:/_nds/nds-bootstrap", 0777);
 
 	if (wideCheatFound) {
-		if (fcopy(wideBinPath, wideCheatDataPath) != 1) {
+		if (fcopy(wideBinPath, wideCheatDataPath) != 0) {
 			remove(wideCheatDataPath);
 			consoleDemoInit();
 			iprintf("Failed to copy widescreen\ncode for the game.");
