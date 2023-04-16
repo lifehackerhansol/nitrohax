@@ -393,8 +393,7 @@ void UserInterface::wordWrap (char* str, int height, int width)
 void UserInterface::writeTextBox (TEXT_TYPE textType, const char* str, va_list args)
 {
 	char dispStr[MAX_CHARS_PER_SCREEN];
-	int len;
-	len = vsniprintf(dispStr, MAX_CHARS_PER_SCREEN, str, args);
+	vsniprintf(dispStr, MAX_CHARS_PER_SCREEN, str, args);
 	int lastRow;
 
 	clearMessage (textType);
