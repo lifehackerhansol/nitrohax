@@ -60,7 +60,8 @@ int fcopy(const char *sourcePath, const char *destinationPath)
 		if (offset > fsize) {
 			fclose(sourceFile);
 			fclose(destinationFile);
-			return 0;
+			return 1;
+			break;
 		}
 	}
 
