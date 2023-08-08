@@ -43,7 +43,6 @@
 
 #include "common.h"
 #include "read_card.h"
-#include "cheat.h"
 
 /*-------------------------------------------------------------------------
 External functions
@@ -53,11 +52,8 @@ extern void arm7_reset (void);
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Important things
-#define NDS_HEAD 0x027FFE00
+#define NDS_HEAD 0x02FFFE00
 tNDSHeader* ndsHeader = (tNDSHeader*)NDS_HEAD;
-
-#define CHEAT_ENGINE_LOCATION	0x027FE000
-#define CHEAT_DATA_LOCATION  	0x06010000
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Used for debugging purposes
@@ -75,28 +71,28 @@ static void errorOutput (u32 code) {
 #define FW_READ        0x03
 
 void arm7_readFirmware (uint32 address, uint8 * buffer, uint32 size) {
-  uint32 index;
+	uint32 index;
 
-  // Read command
-  while (REG_SPICNT & SPI_BUSY);
-  REG_SPICNT = SPI_ENABLE | SPI_CONTINUOUS | SPI_DEVICE_NVRAM;
-  REG_SPIDATA = FW_READ;
-  while (REG_SPICNT & SPI_BUSY);
+	// Read command
+	while (REG_SPICNT & SPI_BUSY);
+	REG_SPICNT = SPI_ENABLE | SPI_CONTINUOUS | SPI_DEVICE_NVRAM;
+	REG_SPIDATA = FW_READ;
+	while (REG_SPICNT & SPI_BUSY);
 
-  // Set the address
-  REG_SPIDATA =  (address>>16) & 0xFF;
-  while (REG_SPICNT & SPI_BUSY);
-  REG_SPIDATA =  (address>>8) & 0xFF;
-  while (REG_SPICNT & SPI_BUSY);
-  REG_SPIDATA =  (address) & 0xFF;
-  while (REG_SPICNT & SPI_BUSY);
+	// Set the address
+	REG_SPIDATA =  (address>>16) & 0xFF;
+	while (REG_SPICNT & SPI_BUSY);
+	REG_SPIDATA =  (address>>8) & 0xFF;
+	while (REG_SPICNT & SPI_BUSY);
+	REG_SPIDATA =  (address) & 0xFF;
+	while (REG_SPICNT & SPI_BUSY);
 
-  for (index = 0; index < size; index++) {
-    REG_SPIDATA = 0;
-    while (REG_SPICNT & SPI_BUSY);
-    buffer[index] = REG_SPIDATA & 0xFF;
-  }
-  REG_SPICNT = 0;
+	for (index = 0; index < size; index++) {
+		REG_SPIDATA = 0;
+		while (REG_SPICNT & SPI_BUSY);
+		buffer[index] = REG_SPIDATA & 0xFF;
+	}
+	REG_SPICNT = 0;
 }
 
 /*-------------------------------------------------------------------------
@@ -213,14 +209,6 @@ void arm7_main (void) {
 	// Load the NDS file
 	errorCode = arm7_loadBinary();
 	if (errorCode) {
-		errorOutput(errorCode);
-	}
-
-	ipcSendState(ARM7_HOOKBIN);
-
-	// Load the cheat engine and hook it into the ARM7 binary
-	errorCode = arm7_hookGame(ndsHeader, (const u32*)CHEAT_DATA_LOCATION, (u32*)CHEAT_ENGINE_LOCATION);
-	if (errorCode != ERR_NONE && errorCode != ERR_NOCHEAT) {
 		errorOutput(errorCode);
 	}
 

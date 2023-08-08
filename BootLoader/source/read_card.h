@@ -21,7 +21,7 @@
 
 #include <nds/ndstypes.h>
 #include <nds/memory.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 #define CARD_NDS_HEADER_SIZE (0x200)
 #define CARD_SECURE_AREA_OFFSET (0x4000)

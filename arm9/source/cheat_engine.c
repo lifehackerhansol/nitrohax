@@ -23,9 +23,6 @@
 #include "cheat_engine.h"
 #define LCDC_BANK_C (vu16*)0x06840000
 
-#define CHEAT_DATA_LOCATION ((u32*)0x06850000)
-#define CHEAT_CODE_END	0xCF000000
-
 static void vramset (volatile void* dst, u16 val, int len)
 {
 	vu32* dst32 = (vu32*)dst;
@@ -46,10 +43,9 @@ static void vramcpy (volatile void* dst, const void* src, int len)
 	}
 }
 
-void runCheatEngine (void* cheats, int cheatLength, bool BoostVRAM)
+void runCheatEngine (bool BoostVRAM)
 {
 	irqDisable(IRQ_ALL);
-
 
 	// Direct CPU access to VRAM bank C
 	VRAM_C_CR = VRAM_ENABLE | VRAM_C_LCD;
@@ -57,22 +53,16 @@ void runCheatEngine (void* cheats, int cheatLength, bool BoostVRAM)
 	vramset (LCDC_BANK_C, 0x0000, 128 * 1024);
 	// Load the loader/patcher into the correct address
 	vramcpy (LCDC_BANK_C, load_bin, load_bin_size);
-	// Put the codes 64KiB after the start of the loader
-	vramcpy (CHEAT_DATA_LOCATION, cheats, cheatLength);
-	// Mark the end of the code list
-	CHEAT_DATA_LOCATION[cheatLength/sizeof(u32)] = CHEAT_CODE_END;
-	CHEAT_DATA_LOCATION[cheatLength/sizeof(u32) + 1] = 0;	
 
 	// Give the VRAM to the ARM7
 	VRAM_C_CR = VRAM_ENABLE | VRAM_C_ARM7_0x06000000;	
-	
+
 	if(BoostVRAM == true) { REG_SCFG_EXT=0x03002000; } else { REG_SCFG_EXT=0x03000000; }
-	
+
 	// Reset into a passme loop
 	REG_EXMEMCNT = 0xffff;
-	*((vu32*)0x027FFFFC) = 0;
-	*((vu32*)0x027FFE04) = (u32)0xE59FF018;
-	*((vu32*)0x027FFE24) = (u32)0x027FFE04;
+	*((vu32*)0x02FFFFFC) = 0;
+	*((vu32*)0x02FFFE04) = (u32)0xE59FF018;
+	*((vu32*)0x02FFFE24) = (u32)0x027FFE04;
 	swiSoftReset(); 
 }
-

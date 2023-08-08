@@ -19,7 +19,6 @@
 #include <nds.h>
 #include <nds/arm7/input.h>
 #include <nds/system.h>
-#include <maxmod7.h>
 
 #include "cheat_engine_arm7.h"
 #include "resetslot.h"
@@ -44,11 +43,8 @@ int main(void) {
 	// Start the RTC tracking IRQ
 	initClockIRQ();
 
-	mmInstall(FIFO_MAXMOD);
-
 	SetYtrigger(80);
 
-	installSoundFIFO();
 	installSystemFIFO();
 
 	irqSet(IRQ_VCOUNT, VcountHandler);
@@ -58,7 +54,7 @@ int main(void) {
 
 	i2cWriteRegister(0x4A, 0x12, 0x00);		// Press power-button for auto-reset
 	i2cWriteRegister(0x4A, 0x70, 0x01);		// Bootflag = Warmboot/SkipHealthSafety
-	
+
 	// Make sure Arm9 had a chance to check slot status
 	fifoWaitValue32(FIFO_USER_01);
 	// If Arm9 reported slot is powered off, have Arm7 wait for Arm9 to be ready before card reset. This makes sure arm7 doesn't try card reset too early.

@@ -20,14 +20,13 @@
 #define CHEAT_ENGINE_H
 
 #include <nds/ndstypes.h>
-#define CHEAT_MAX_DATA_SIZE (64 * 1024)			// 64KiB
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-void runCheatEngine (void* cheats, int cheatLength, bool BoostVRAM);
+void runCheatEngine (bool BoostVRAM);
 
 
 #ifdef __cplusplus

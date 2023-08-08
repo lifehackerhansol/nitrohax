@@ -14,7 +14,7 @@ endif
 #---------------------------------------------------------------------------------
 export TARGET		:= load
 BUILD		:=	build
-SOURCES		:=	source source/patches 
+SOURCES		:=	source
 INCLUDES	:=	build
 SPECS		:=  specs
  
