@@ -21,8 +21,6 @@
 #include "cheat.h"
 #include "consoletext.h"
 
-//#define DEMO
-
 class Sprite;
 
 
@@ -53,10 +51,6 @@ public:
 	
 	std::string fileBrowser (const char* extension);
 
-#ifdef DEMO
-	void demo (void) ;
-#endif
-	
 private:
 	static const int FONT_PALETTE = 1;
 	

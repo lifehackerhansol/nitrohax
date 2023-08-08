@@ -949,58 +949,6 @@ std::string UserInterface::fileBrowser (const char* extension)
 	return filename;
 }
 
-
-#ifdef DEMO
-struct DEMO_STUFF
-{
-	const char name[40];
-	int icon;
-};
-
-void UserInterface::demo (void) 
-{
-	const DEMO_STUFF demoMenu[] =  { 
-		{"Track Hacks (WiFi)", BUTTON_BG_FOLDER}, 
-		{"Shy Guy Codes", BUTTON_BG_FOLDER},
-		{"Press Y for safe DC", BUTTON_BG_ON},
-		{"Speed Codes", BUTTON_BG_FOLDER},
-		{"WiFi Win Loss Modifier", BUTTON_BG_FOLDER},
-		{"Item Codes: Always have...", BUTTON_BG_FOLDER},
-		{"ALWAYS USE CART", BUTTON_BG_FOLDER},
-		{"Always Play as CHARACTER", BUTTON_BG_FOLDER},
-		{"CRAZY SOUNDS", BUTTON_BG_OFF},
-		{"Always Play on an UNTEXTURED track", BUTTON_BG_OFF}
-	};
-
-	int menuLength;
-
-	menuLength = sizeof(demoMenu) / sizeof (DEMO_STUFF);
-
-	subText->clearText(0, 0, MENU_LAST_ROW, MENU_LAST_COL);
-
-	showScrollbar(true);
-	showCursor (true);
-	for (int col = 0; col < GO_BUTTON_WIDTH; col++) {
-		for (int row = 0; row  < GO_BUTTON_HEIGHT; row++) {
-			putGuiTile (GO_BUTTON_OFFSET + col + row * GO_BUTTON_WIDTH, row + GO_BUTTON_ROW, col + GO_BUTTON_COL, GO_BUTTON_PALETTE, false);
-		}
-	}
-
-	setCursorPosition ((MENU_FIRST_ROW + menuLength - menuLevel.top - 1) * TOUCH_GRID_SIZE);
-	setScrollbarPosition (menuLength - 1, menuLength - 1);
-	showMessage (TEXT_TITLE, "Mario Kart DS (USA)");
-
-	for (int curItem = 0; curItem < menuLength; curItem++) {
-		subText->putText (demoMenu[curItem].name, (MENU_FIRST_ROW + curItem) * 2,
-			MENU_FIRST_COL, (MENU_FIRST_ROW + curItem) * 2, MENU_LAST_COL, (MENU_FIRST_ROW + curItem) * 2, MENU_FIRST_COL);
-
-		putButtonBg ((BUTTON_BG_OFFSETS)demoMenu[curItem].icon, (MENU_FIRST_ROW + curItem) * 2);
-
-		showMessage (demoMenu[curItem].name);
-	}
-}
-#endif
-
 // Sprite
 int Sprite::getSpriteNum (void)
 {

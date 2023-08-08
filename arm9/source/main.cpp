@@ -67,11 +67,6 @@ int main(int argc, const char* argv[])
 
 	ui.showMessage (UserInterface::TEXT_TITLE, TITLE_STRING);
 
-#ifdef DEMO
-	ui.demo();
-	while(1);
-#endif
-
 	if(REG_SCFG_MC == 0x11) {
 		ui.showMessage ("No cartridge detected!\nPlease insert a cartridge to continue!");
 		do { swiWaitForVBlank(); } while (REG_SCFG_MC == 0x11);
