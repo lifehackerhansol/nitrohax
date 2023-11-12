@@ -17,7 +17,7 @@ constexpr std::array<const char *, 4> expandLabels = {"Default", "No", "Yes", "Y
 constexpr std::array<const char *, 3> bootstrapLabels = {"Default", "Release", "Nightly"};
 constexpr std::array<const char *, 4> widescreenLabels = {"Default", "Off", "On", "Forced"};
 
-GameSettings::GameSettings(const std::string &fileName, const std::string &filePath) : iniPath("sd:/_nds/ntr-forwarder/gamesettings/" + fileName + ".ini"), romPath(filePath), ini(iniPath) {
+GameSettings::GameSettings(const std::string &fileName, const std::string &filePath) : iniPath("/_nds/ntr-forwarder/gamesettings/" + fileName + ".ini"), romPath(filePath), ini(iniPath) {
 	language = ini.GetInt("GAMESETTINGS", "LANGUAGE", language);
 	region = ini.GetInt("GAMESETTINGS", "REGION", region);
 	saveNo = ini.GetInt("GAMESETTINGS", "SAVE_NUMBER", saveNo);
