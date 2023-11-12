@@ -233,6 +233,6 @@ bool checkDsiBinaries(FILE* ndsFile);
  */
 //u32 getSDKVersion(FILE* ndsFile);
 
-int checkIfHomebrew(FILE* ndsFile);
+int checkIfHomebrew(FILE* ndsFile, const bool isRunFromSd);
 
 #endif // NDS_HEADER2

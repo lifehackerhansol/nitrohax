@@ -106,8 +106,8 @@ int SetDonorSDK(const char* filename) {
 /**
  * Fix AP for some games.
  */
-std::string setApFix(const char *filename) {
-	bool useTwlmPath = (access("sd:/_nds/TWiLightMenu/extras/apfix.pck", F_OK) == 0);
+std::string setApFix(const char *filename, const bool isRunFromSd) {
+	const bool useTwlmPath = (access(isRunFromSd ? "sd:/_nds/TWiLightMenu/extras/apfix.pck" : "fat:/_nds/TWiLightMenu/extras/apfix.pck", F_OK) == 0);
 
 	char game_TID[5];
 	u16 headerCRC16 = 0;
@@ -115,10 +115,10 @@ std::string setApFix(const char *filename) {
 	bool ipsFound = false;
 	bool cheatVer = true;
 	char ipsPath[256];
-	snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.ips", (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), filename);
+	snprintf(ipsPath, sizeof(ipsPath), "%s:/_nds/%s/apfix/%s.ips", (isRunFromSd ? "sd" : "fat"), (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), filename);
 	ipsFound = (access(ipsPath, F_OK) == 0);
 	if (!ipsFound) {
-		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s.bin", (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), filename);
+		snprintf(ipsPath, sizeof(ipsPath), "%s:/_nds/%s/apfix/%s.bin", (isRunFromSd ? "sd" : "fat"), (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), filename);
 		ipsFound = (access(ipsPath, F_OK) == 0);
 	} else {
 		cheatVer = false;
@@ -134,10 +134,10 @@ std::string setApFix(const char *filename) {
 		fclose(f_nds_file);
 		game_TID[4] = 0;
 
-		snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.ips", (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), game_TID, headerCRC16);
+		snprintf(ipsPath, sizeof(ipsPath), "%s:/_nds/%s/apfix/%s-%X.ips", (isRunFromSd ? "sd" : "fat"), (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), game_TID, headerCRC16);
 		ipsFound = (access(ipsPath, F_OK) == 0);
 		if (!ipsFound) {
-			snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/%s/apfix/%s-%X.bin", (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), game_TID, headerCRC16);
+			snprintf(ipsPath, sizeof(ipsPath), "%s:/_nds/%s/apfix/%s-%X.bin", (isRunFromSd ? "sd" : "fat"), (useTwlmPath ? "TWiLightMenu/extras" : "ntr-forwarder"), game_TID, headerCRC16);
 			ipsFound = (access(ipsPath, F_OK) == 0);
 		} else {
 			cheatVer = false;
@@ -148,7 +148,7 @@ std::string setApFix(const char *filename) {
 		return ipsPath;
 	}
 
-	FILE *file = fopen(useTwlmPath ? "sd:/_nds/TWiLightMenu/extras/apfix.pck" : "sd:/_nds/ntr-forwarder/apfix.pck", "rb");
+	FILE *file = fopen(isRunFromSd ? (useTwlmPath ? "sd:/_nds/TWiLightMenu/extras/apfix.pck" : "sd:/_nds/ntr-forwarder/apfix.pck") : (useTwlmPath ? "fat:/_nds/TWiLightMenu/extras/apfix.pck" : "fat:/_nds/ntr-forwarder/apfix.pck"), "rb");
 	if (file) {
 		char buf[5] = {0};
 		fread(buf, 1, 4, file);
@@ -195,8 +195,8 @@ std::string setApFix(const char *filename) {
 			u8 *buffer = new u8[size];
 			fread(buffer, 1, size, file);
 
-			mkdir("sd:/_nds/nds-bootstrap", 0777);
-			snprintf(ipsPath, sizeof(ipsPath), "sd:/_nds/nds-bootstrap/apFix%s", cheatVer ? "Cheat.bin" : ".ips");
+			mkdir(isRunFromSd ? "sd:/_nds/nds-bootstrap" : "fat:/_nds/nds-bootstrap", 0777);
+			snprintf(ipsPath, sizeof(ipsPath), "%s:/_nds/nds-bootstrap/apFix%s", isRunFromSd ? "sd" : "fat", cheatVer ? "Cheat.bin" : ".ips");
 			FILE *out = fopen(ipsPath, "wb");
 			if(out) {
 				fwrite(buffer, 1, size, out);
@@ -239,7 +239,7 @@ void setAutoload(const char *resetTid) {
  * Enable widescreen for some games.
  */
 void SetWidescreen(const char *filename, bool isHomebrew, const char *resetTid, bool force) {
-	bool useTwlmPath = (access("sd:/_nds/TWiLightMenu/extras/widescreen.pck", F_OK) == 0);
+	const bool useTwlmPath = (access("sd:/_nds/TWiLightMenu/extras/widescreen.pck", F_OK) == 0);
 
 	const char* wideCheatDataPath = "sd:/_nds/nds-bootstrap/wideCheatData.bin";
 	remove(wideCheatDataPath);
@@ -411,33 +411,22 @@ std::string savename;
 std::string romFolderNoSlash;
 std::string savepath;
 
-static inline void takeWhileMsg() {
-	#ifdef DSI
-	iprintf ("If this takes a while, close\n");
-	iprintf ("and open the console's lid.\n");
-	#else
-	iprintf ("If this takes a while,\n");
-	iprintf ("press HOME, and press B.\n");
-	#endif
-	iprintf ("\n");
-}
-
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
 
 	defaultExceptionHandler();
 
-	// Cut slot1 power to save battery
-	disableSlot1();
-
 	keysSetRepeat(25, 5);
 
-	*(vu32*)0x0DFFFE0C = 0x4652544E;
-	bool debugRam = (*(vu32*)0x0DFFFE0C == 0x4652544E);
+	if (isDSiMode()) {
+		// Cut slot1 power to save battery
+		disableSlot1();
 
-	if (debugRam) {
-		consoleModel = fifoGetValue32(FIFO_USER_05) == 0xD2 ? 1 : 2; // 1: Panda DSi, 2: 3DS/2DS
+		*(vu32*)0x0DFFFE0C = 0x4652544E; // Check for Debug RAM
+		if (*(vu32*)0x0DFFFE0C == 0x4652544E) {
+			consoleModel = fifoGetValue32(FIFO_USER_05) == 0xD2 ? 1 : 2; // 1: Panda DSi, 2: 3DS/2DS
+		}
 	}
 
 	if (fatInitDefault()) {
@@ -453,8 +442,9 @@ int main(int argc, char **argv) {
 			}
 		} else {
 		nitroFSInit(argv[0]);
+		const bool isRunFromSd = (strncmp(argv[0], "sd", 2) == 0);
 
-		CIniFile ntrforwarderini( "sd:/_nds/ntr_forwarder.ini" );
+		CIniFile ntrforwarderini( isRunFromSd ? "sd:/_nds/ntr_forwarder.ini" : "fat:/_nds/ntr_forwarder.ini" );
 
 		bootstrapFile = ntrforwarderini.GetInt("NTR-FORWARDER", "BOOTSTRAP_FILE", 0);
 		widescreenLoaded = ntrforwarderini.GetInt("NTR-FORWARDER", "WIDESCREEN_LOADED", false);
@@ -491,8 +481,8 @@ int main(int argc, char **argv) {
 		}
 
 		FILE *f_nds_file = fopen(filename.c_str(), "rb");
-		bool dsiBinariesFound = checkDsiBinaries(f_nds_file);
-		int isHomebrew = checkIfHomebrew(f_nds_file);
+		bool dsiBinariesFound = (!isDSiMode()) || checkDsiBinaries(f_nds_file);
+		int isHomebrew = checkIfHomebrew(f_nds_file, isRunFromSd);
 		bool isDSiWare = false;
 
 		if (isHomebrew == 0) {
@@ -503,13 +493,7 @@ int main(int argc, char **argv) {
 
 		extern sNDSHeaderExt ndsHeader;
 
-		if ((ndsHeader.gameCode[0] == 0x48 && ndsHeader.makercode[0] != 0 && ndsHeader.makercode[1] != 0)
-		 || (ndsHeader.gameCode[0] == 0x4B && ndsHeader.makercode[0] != 0 && ndsHeader.makercode[1] != 0)
-		 || (ndsHeader.gameCode[0] == 0x5A && ndsHeader.makercode[0] != 0 && ndsHeader.makercode[1] != 0)
-		 || (ndsHeader.gameCode[0] == 0x42 && ndsHeader.gameCode[1] == 0x38 && ndsHeader.gameCode[2] == 0x38))
-		{ if (ndsHeader.unitCode != 0)
-			isDSiWare = true; // Is a DSiWare game
-		}
+		isDSiWare = (ndsHeader.unitCode != 0 && (ndsHeader.accessControl & BIT(4))); // Is a DSiWare game
 
 		if (isHomebrew == 2) {
 			const char *argarray[] = {argv[1]};
@@ -522,33 +506,35 @@ int main(int argc, char **argv) {
 			iprintf("Start failed. Error %i\n", err);
 			if (err == 1) iprintf ("ROM not found.\n");
 		} else {
-			mkdir ("sd:/_nds/nds-bootstrap", 0777);
+			mkdir(isRunFromSd ? "sd:/_nds/nds-bootstrap" : "fat:/_nds/nds-bootstrap", 0777);
 
-			if (argc >= 3) {
-				u32 autoloadParams[2] = {0};
-				memcpy(autoloadParams, argv[2], 4);
-				autoloadParams[1] = 0x00030000 | argv[2][4];
+			if (isRunFromSd) {
+				if (argc >= 3) {
+					u32 autoloadParams[2] = {0};
+					memcpy(autoloadParams, argv[2], 4);
+					autoloadParams[1] = 0x00030000 | argv[2][4];
 
-				FILE *srBackendFile = fopen("sd:/_nds/nds-bootstrap/srBackendId.bin", "wb");
-				fwrite(autoloadParams, sizeof(u32), 2, srBackendFile);
-				fclose(srBackendFile);
-			} else {
-				FILE *headerFile = fopen("sd:/_nds/ntr-forwarder/header.bin", "rb");
-				if (headerFile) {
 					FILE *srBackendFile = fopen("sd:/_nds/nds-bootstrap/srBackendId.bin", "wb");
-					fread(__DSiHeader, 1, 0x1000, headerFile);
-					fwrite((char*)__DSiHeader+0x230, sizeof(u32), 2, srBackendFile);
+					fwrite(autoloadParams, sizeof(u32), 2, srBackendFile);
 					fclose(srBackendFile);
-					fclose(headerFile);
-				} else if (access("sd:/_nds/nds-bootstrap/srBackendId.bin", F_OK) == 0) {
-					remove("sd:/_nds/nds-bootstrap/srBackendId.bin");
+				} else {
+					FILE *headerFile = fopen("sd:/_nds/ntr-forwarder/header.bin", "rb");
+					if (headerFile) {
+						FILE *srBackendFile = fopen("sd:/_nds/nds-bootstrap/srBackendId.bin", "wb");
+						fread(__DSiHeader, 1, 0x1000, headerFile);
+						fwrite((char*)__DSiHeader+0x230, sizeof(u32), 2, srBackendFile);
+						fclose(srBackendFile);
+						fclose(headerFile);
+					} else if (access("sd:/_nds/nds-bootstrap/srBackendId.bin", F_OK) == 0) {
+						remove("sd:/_nds/nds-bootstrap/srBackendId.bin");
+					}
 				}
 			}
 
 			// Delete cheat data
-			remove("sd:/_nds/nds-bootstrap/cheatData.bin");
+			remove(isRunFromSd ? "sd:/_nds/nds-bootstrap/cheatData.bin" : "fat:/_nds/nds-bootstrap/cheatData.bin");
 			if(!widescreenLoaded)
-				remove("sd:/_nds/nds-bootstrap/wideCheatData.bin");
+				remove(isRunFromSd ? "sd:/_nds/nds-bootstrap/wideCheatData.bin" : "fat:/_nds/nds-bootstrap/wideCheatData.bin");
 
 			const char *typeToReplace = ".nds";
 			if (extention(filename, ".dsi")) {
@@ -574,68 +560,87 @@ int main(int argc, char **argv) {
 			std::string dsiWarePrvPath = ReplaceAll(savepath, ".sav", ".prv");
 
 			if (isDSiWare) {
-				if ((getFileSize(dsiWarePubPath.c_str()) == 0) && (ndsHeader.pubSavSize > 0)) {
-					consoleDemoInit();
-					iprintf("Creating public save file...\n");
-					iprintf ("\n");
-					takeWhileMsg();
+				if (isRunFromSd) {
+					if ((getFileSize(dsiWarePubPath.c_str()) == 0) && (ndsHeader.pubSavSize > 0)) {
+						consoleDemoInit();
+						iprintf("Creating public save file...\n");
+						iprintf ("\n");
 
-					static const int BUFFER_SIZE = 4096;
-					char buffer[BUFFER_SIZE];
-					toncset(buffer, 0, sizeof(buffer));
-					char savHdrPath[64];
-					snprintf(savHdrPath, sizeof(savHdrPath), "nitro:/DSiWareSaveHeaders/%x.savhdr",
-						 (unsigned int)ndsHeader.pubSavSize);
-					FILE *hdrFile = fopen(savHdrPath, "rb");
-					if (hdrFile)
-						fread(buffer, 1, 0x200, hdrFile);
-					fclose(hdrFile);
+						static const int BUFFER_SIZE = 4096;
+						char buffer[BUFFER_SIZE];
+						toncset(buffer, 0, sizeof(buffer));
+						char savHdrPath[64];
+						snprintf(savHdrPath, sizeof(savHdrPath), "nitro:/DSiWareSaveHeaders/%x.savhdr",
+							 (unsigned int)ndsHeader.pubSavSize);
+						FILE *hdrFile = fopen(savHdrPath, "rb");
+						if (hdrFile)
+							fread(buffer, 1, 0x200, hdrFile);
+						fclose(hdrFile);
 
-					FILE *pFile = fopen(dsiWarePubPath.c_str(), "wb");
-					if (pFile) {
-						fwrite(buffer, 1, sizeof(buffer), pFile);
-						fseek(pFile, ndsHeader.pubSavSize - 1, SEEK_SET);
-						fputc('\0', pFile);
-						fclose(pFile);
+						FILE *pFile = fopen(dsiWarePubPath.c_str(), "wb");
+						if (pFile) {
+							fwrite(buffer, 1, sizeof(buffer), pFile);
+							fseek(pFile, ndsHeader.pubSavSize - 1, SEEK_SET);
+							fputc('\0', pFile);
+							fclose(pFile);
+						}
+						iprintf("Public save file created!\n");
+
+						for (int i = 0; i < 30; i++) {
+							swiWaitForVBlank();
+						}
 					}
-					iprintf("Public save file created!\n");
 
-					for (int i = 0; i < 30; i++) {
-						swiWaitForVBlank();
+					if ((getFileSize(dsiWarePrvPath.c_str()) == 0) && (ndsHeader.prvSavSize > 0)) {
+						consoleDemoInit();
+						iprintf("Creating private save file...\n");
+						iprintf ("\n");
+
+						static const int BUFFER_SIZE = 4096;
+						char buffer[BUFFER_SIZE];
+						toncset(buffer, 0, sizeof(buffer));
+						char savHdrPath[64];
+						snprintf(savHdrPath, sizeof(savHdrPath), "nitro:/DSiWareSaveHeaders/%x.savhdr",
+							 (unsigned int)ndsHeader.prvSavSize);
+						FILE *hdrFile = fopen(savHdrPath, "rb");
+						if (hdrFile)
+							fread(buffer, 1, 0x200, hdrFile);
+						fclose(hdrFile);
+
+						FILE *pFile = fopen(dsiWarePrvPath.c_str(), "wb");
+						if (pFile) {
+							fwrite(buffer, 1, sizeof(buffer), pFile);
+							fseek(pFile, ndsHeader.prvSavSize - 1, SEEK_SET);
+							fputc('\0', pFile);
+							fclose(pFile);
+						}
+						iprintf("Private save file created!\n");
+
+						for (int i = 0; i < 30; i++) {
+							swiWaitForVBlank();
+						}
+					}
+				} else {
+					const u32 savesize = ((ndsHeader.pubSavSize > 0) ? ndsHeader.pubSavSize : ndsHeader.prvSavSize);
+					if ((getFileSize(savepath.c_str()) == 0) && (savesize > 0)) {
+						consoleDemoInit();
+						iprintf("Creating save file...\n");
+						iprintf ("\n");
+
+						FILE *pFile = fopen(savepath.c_str(), "wb");
+						if (pFile) {
+							fseek(pFile, savesize - 1, SEEK_SET);
+							fputc('\0', pFile);
+							fclose(pFile);
+						}
+						iprintf ("Done!\n");
+
+						for (int i = 0; i < 30; i++) {
+							swiWaitForVBlank();
+						}
 					}
 				}
-
-				if ((getFileSize(dsiWarePrvPath.c_str()) == 0) && (ndsHeader.prvSavSize > 0)) {
-					consoleDemoInit();
-					iprintf("Creating private save file...\n");
-					iprintf ("\n");
-					takeWhileMsg();
-
-					static const int BUFFER_SIZE = 4096;
-					char buffer[BUFFER_SIZE];
-					toncset(buffer, 0, sizeof(buffer));
-					char savHdrPath[64];
-					snprintf(savHdrPath, sizeof(savHdrPath), "nitro:/DSiWareSaveHeaders/%x.savhdr",
-						 (unsigned int)ndsHeader.prvSavSize);
-					FILE *hdrFile = fopen(savHdrPath, "rb");
-					if (hdrFile)
-						fread(buffer, 1, 0x200, hdrFile);
-					fclose(hdrFile);
-
-					FILE *pFile = fopen(dsiWarePrvPath.c_str(), "wb");
-					if (pFile) {
-						fwrite(buffer, 1, sizeof(buffer), pFile);
-						fseek(pFile, ndsHeader.prvSavSize - 1, SEEK_SET);
-						fputc('\0', pFile);
-						fclose(pFile);
-					}
-					iprintf("Private save file created!\n");
-
-					for (int i = 0; i < 30; i++) {
-						swiWaitForVBlank();
-					}
-				}
-			} else if (isHomebrew == 0 && (strncmp(ndsHeader.gameCode, "NTR", 3) != 0)) {
+			} else if (isHomebrew == 0) {
 				u32 orgsavesize = getFileSize(savepath.c_str());
 				u32 savesize = 524288; // 512KB (default size for most games)
 
@@ -671,7 +676,7 @@ int main(int argc, char **argv) {
 			}
 
 			// Set widescreen
-			if(consoleModel == 2 && gameSettings.widescreen >= 1) {
+			if(isRunFromSd && consoleModel == 2 && gameSettings.widescreen >= 1) {
 				if(widescreenLoaded) {
 					UnsetWidescreen();
 				} else if(argc >= 3) {
@@ -692,16 +697,16 @@ int main(int argc, char **argv) {
 			u32 gameCode, crc32;
 
 			bool cheatsEnabled = true;
-			const char* cheatDataBin = "sd:/_nds/nds-bootstrap/cheatData.bin";
-			mkdir("sd:/_nds", 0777);
-			mkdir("sd:/_nds/nds-bootstrap", 0777);
+			const char* cheatDataBin = isRunFromSd ? "sd:/_nds/nds-bootstrap/cheatData.bin" : "fat:/_nds/nds-bootstrap/cheatData.bin";
+			mkdir(isRunFromSd ? "sd:/_nds" : "fat:/_nds", 0777);
+			mkdir(isRunFromSd ? "sd:/_nds/nds-bootstrap" : "fat:/_nds/nds-bootstrap", 0777);
 			if(codelist.romData(ndsPath, gameCode, crc32)) {
 				long cheatOffset; size_t cheatSize;
 				// First try ntr-forwarder folder
-				FILE* dat=fopen("sd:/_nds/ntr-forwarder/usrcheat.dat","rb");
+				FILE* dat=fopen(isRunFromSd ? "sd:/_nds/ntr-forwarder/usrcheat.dat" : "fat:/_nds/ntr-forwarder/usrcheat.dat","rb");
 				// If that fails, try TWiLight's file
 				if(!dat)
-					dat=fopen("sd:/_nds/TWiLightMenu/extras/usrcheat.dat","rb");
+					dat=fopen(isRunFromSd ? "sd:/_nds/TWiLightMenu/extras/usrcheat.dat" : "fat:/_nds/TWiLightMenu/extras/usrcheat.dat","rb");
 
 				if (dat) {
 					if (codelist.searchCheatData(dat, gameCode, crc32, cheatOffset, cheatSize)) {
@@ -730,12 +735,14 @@ int main(int argc, char **argv) {
 				remove(cheatDataBin);
 			}
 
-			if (access("sd:/_nds/nds-bootstrap/esrb.bin", F_OK) == 0) {
+			const char* esrbSplashPath = isRunFromSd ? "sd:/_nds/nds-bootstrap/esrb.bin" : "fat:/_nds/nds-bootstrap/esrb.bin";
+			if (access(esrbSplashPath, F_OK) == 0) {
 				// Remove ESRB splash screen generated by TWiLight Menu++
-				remove("sd:/_nds/nds-bootstrap/esrb.bin");
+				remove(esrbSplashPath);
 			}
 
-			CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
+			const char* bootstrapIniPath = isRunFromSd ? "sd:/_nds/nds-bootstrap.ini" : "fat:/_nds/nds-bootstrap.ini";
+			CIniFile bootstrapini( bootstrapIniPath );
 
 			int donorSdkVer = 0;
 			bool dsModeForced = false;
@@ -765,7 +772,7 @@ int main(int argc, char **argv) {
 			char sfnSrl[62];
 			char sfnPub[62];
 			char sfnPrv[62];
-			if (isDSiWare) {
+			if (isRunFromSd && isDSiWare) {
 				fatGetAliasPath("sd:/", dsiWareSrlPath.c_str(), sfnSrl);
 				fatGetAliasPath("sd:/", dsiWarePubPath.c_str(), sfnPub);
 				fatGetAliasPath("sd:/", dsiWarePrvPath.c_str(), sfnPrv);
@@ -776,7 +783,7 @@ int main(int argc, char **argv) {
 
 			// Write
 			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);
-			if (isDSiWare) {
+			if (isRunFromSd && isDSiWare) {
 				bootstrapini.SetString("NDS-BOOTSTRAP", "APP_PATH", sfnSrl);
 				bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", sfnPub);
 				bootstrapini.SetString("NDS-BOOTSTRAP", "PRV_PATH", sfnPrv);
@@ -801,7 +808,7 @@ int main(int argc, char **argv) {
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "CONSOLE_MODEL", consoleModel);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "LANGUAGE", gameSettings.language == -2 ? language : gameSettings.language);
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "REGION", gameSettings.region == -3 ? region : gameSettings.region);
-			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
+			bootstrapini.SaveIniFile( bootstrapIniPath );
 
 			if (isHomebrew == 1) {
 				const char *argarray[] = {bootstrapFile ? "sd:/_nds/nds-bootstrap-hb-nightly.nds" : "sd:/_nds/nds-bootstrap-hb-release.nds"};
@@ -814,7 +821,7 @@ int main(int argc, char **argv) {
 				iprintf("Start failed. Error %i\n", err);
 				if (err == 1) iprintf ("nds-bootstrap (hb) not found.\n");
 			} else {
-				const char *argarray[] = {bootstrapFile ? "sd:/_nds/nds-bootstrap-nightly.nds" : "sd:/_nds/nds-bootstrap-release.nds"};
+				const char *argarray[] = {isRunFromSd ? (bootstrapFile ? "sd:/_nds/nds-bootstrap-nightly.nds" : "sd:/_nds/nds-bootstrap-release.nds") : (bootstrapFile ? "fat:/_nds/nds-bootstrap-nightly.nds" : "fat:/_nds/nds-bootstrap-release.nds")};
 				int err = runNdsFile(argarray[0], sizeof(argarray) / sizeof(argarray[0]), argarray);
 				if (!consoleInited) {
 					consoleDemoInit();
@@ -836,6 +843,9 @@ int main(int argc, char **argv) {
 	}
 
 error:
+	if (!isDSiMode()) {
+		swiWaitForVBlank();
+	}
 	iprintf ("\n");		
 	iprintf ("Press B to return to\n");
 	iprintf (consoleModel >= 2 ? "HOME Menu.\n" : "DSi Menu.\n");
