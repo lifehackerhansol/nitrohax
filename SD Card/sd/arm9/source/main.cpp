@@ -841,7 +841,9 @@ int main(int argc, char **argv) {
 
 error:
 	if (!isDSiMode()) {
-		swiWaitForVBlank();
+		while (1) {
+			swiWaitForVBlank();
+		}
 	}
 	iprintf ("\n");		
 	iprintf ("Press B to return to\n");
