@@ -228,7 +228,7 @@ int runNdsFile (const char* filename, int argc, const char** argv)  {
 		argv = args;
 	}
 
-	return runNds (load_bin, load_bin_size, st.st_ino, true, false, argc, argv);
+	return runNds (load_bin, load_bin_size, st.st_ino, true, true, argc, argv);
 }
 
 /*
