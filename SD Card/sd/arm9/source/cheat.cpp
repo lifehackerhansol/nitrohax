@@ -55,10 +55,10 @@ bool CheatCodelist::parse(const std::string& aFileName)
 	if(romData(aFileName,gamecode,romcrc32))
 	{
 		// First try ntr-forwarder folder
-		FILE* dat=fopen("sd:/_nds/ntr-forwarder/usrcheat.dat","rb");
+		FILE* dat=fopen("/_nds/ntr-forwarder/usrcheat.dat","rb");
 		// If that fails, try TWiLight's file
 		if(!dat)
-			dat=fopen("sd:/_nds/TWiLightMenu/extras/usrcheat.dat","rb");
+			dat=fopen("/_nds/TWiLightMenu/extras/usrcheat.dat","rb");
 
 		if(dat)
 		{
@@ -495,10 +495,10 @@ void CheatCodelist::onGenerate(void)
 {
 	FILE* db;
 	// Use ntr-forwarder folder if exists
-	if(access("sd:/_nds/ntr-forwarder/usrcheat.dat", F_OK) == 0)
-		db=fopen("sd:/_nds/ntr-forwarder/usrcheat.dat","r+b");
+	if(access("/_nds/ntr-forwarder/usrcheat.dat", F_OK) == 0)
+		db=fopen("/_nds/ntr-forwarder/usrcheat.dat","r+b");
 	else // use TWiLight's file
-		db=fopen("sd:/_nds/TWiLightMenu/extras/usrcheat.dat","r+b");
+		db=fopen("/_nds/TWiLightMenu/extras/usrcheat.dat","r+b");
 
 	if(db)
 	{
