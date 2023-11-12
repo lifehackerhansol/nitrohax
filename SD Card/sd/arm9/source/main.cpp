@@ -473,27 +473,25 @@ int main(int argc, char **argv) {
 			filename.erase(0, last_slash_idx + 1);
 		}
 
-		swiWaitForVBlank();
-		GameSettings gameSettings(filename, ndsPath);
-		scanKeys();
-		if(keysHeld() & KEY_Y) {
-			gameSettings.menu();
-		}
-
 		FILE *f_nds_file = fopen(filename.c_str(), "rb");
 		bool dsiBinariesFound = (!isDSiMode()) || checkDsiBinaries(f_nds_file);
 		int isHomebrew = checkIfHomebrew(f_nds_file, isRunFromSd);
-		bool isDSiWare = false;
-
 		if (isHomebrew == 0) {
 			mkdir ("saves", 0777);
 		}
 
-		fclose(f_nds_file);
-
 		extern sNDSHeaderExt ndsHeader;
 
-		isDSiWare = (ndsHeader.unitCode != 0 && (ndsHeader.accessControl & BIT(4))); // Is a DSiWare game
+		const bool isDSiWare = (ndsHeader.unitCode != 0 && (ndsHeader.accessControl & BIT(4))); // Check if it's a DSiWare game
+
+		swiWaitForVBlank();
+		GameSettings gameSettings(filename, ndsPath);
+		scanKeys();
+		if(keysHeld() & KEY_Y) {
+			gameSettings.menu(f_nds_file, filename, (bool)isHomebrew);
+		}
+
+		fclose(f_nds_file);
 
 		if (isHomebrew == 2) {
 			const char *argarray[] = {argv[1]};
@@ -777,8 +775,71 @@ int main(int argc, char **argv) {
 				fatGetAliasPath("sd:/", dsiWarePrvPath.c_str(), sfnPrv);
 			}
 
-			// Fix weird bug where some settings would be cleared
+			// Fix weird bug where some settings would get cleared
 			cacheFatTable = bootstrapini.GetInt("NDS-BOOTSTRAP", "CACHE_FAT_TABLE", cacheFatTable);
+
+			int requiresDonorRom = 0;
+			bool dsDebugRam = false;
+			if (!isDSiMode()) {
+				const u32 wordBak = *(vu32*)0x02800000;
+				const u32 wordBak2 = *(vu32*)0x02C00000;
+				*(vu32*)(0x02800000) = 0x314D454D;
+				*(vu32*)(0x02C00000) = 0x324D454D;
+				dsDebugRam = ((*(vu32*)(0x02800000) == 0x314D454D) && (*(vu32*)(0x02C00000) == 0x324D454D));
+				*(vu32*)(0x02800000) = wordBak;
+				*(vu32*)(0x02C00000) = wordBak2;
+			}
+
+			if (ndsHeader.a7mbk6 == 0x080037C0 && !isDSiMode()
+			&& ((dsDebugRam ? (memcmp(ndsHeader.gameCode, "DME", 3) == 0 || memcmp(ndsHeader.gameCode, "DMD", 3) == 0 || memcmp(ndsHeader.gameCode, "DMP", 3) == 0 || memcmp(ndsHeader.gameCode, "DHS", 3) == 0) : (memcmp(ndsHeader.gameCode, "DMP", 3) == 0 || memcmp(ndsHeader.gameCode, "DHS", 3) == 0))
+			|| (ndsHeader.gameCode[0] != 'D' && memcmp(ndsHeader.gameCode, "KCX", 3) != 0 && memcmp(ndsHeader.gameCode, "KAV", 3) != 0 && memcmp(ndsHeader.gameCode, "KNK", 3) != 0 && memcmp(ndsHeader.gameCode, "KE3", 3) != 0))) {
+				requiresDonorRom = 51; // SDK5 ROM required
+			} else if (memcmp(ndsHeader.gameCode, "AYI", 3) == 0 && ndsHeader.arm7binarySize == 0x25F70) {
+				requiresDonorRom = 20; // SDK2.0 ROM required for Yoshi Touch & Go (Europe)
+			}
+			if (requiresDonorRom > 0) {
+				const char* pathDefine = "DONORTWL_NDS_PATH"; // SDK5.x (TWL)
+				if (requiresDonorRom == 20) {
+					pathDefine = "DONOR20_NDS_PATH"; // SDK2.0
+				}
+				std::string donorRomPath;
+				donorRomPath = bootstrapini.GetString("NDS-BOOTSTRAP", pathDefine, "");
+				bool donorRomFound = ((!isDSiMode() && requiresDonorRom != 20 && access("fat:/_nds/nds-bootstrap/b4dsTwlDonor.bin", F_OK) == 0)
+									|| (donorRomPath != "" && access(donorRomPath.c_str(), F_OK) == 0));
+				if (!donorRomFound && requiresDonorRom != 20) {
+					pathDefine = "DONORTWL0_NDS_PATH"; // SDK5.0 (TWL)
+					donorRomPath = bootstrapini.GetString("NDS-BOOTSTRAP", pathDefine, "");
+					donorRomFound = (donorRomPath != "" && access(donorRomPath.c_str(), F_OK) == 0);
+				}
+				if (!donorRomFound && !isDSiMode() && requiresDonorRom != 20 && memcmp(ndsHeader.gameCode, "KUB", 3) != 0) {
+					pathDefine = "DONOR5_NDS_PATH"; // SDK5.x (NTR)
+					donorRomPath = bootstrapini.GetString("NDS-BOOTSTRAP", pathDefine, "");
+					donorRomFound = (donorRomPath != "" && access(donorRomPath.c_str(), F_OK) == 0);
+					if (!donorRomFound) {
+						pathDefine = "DONOR5_NDS_PATH_ALT"; // SDK5.x (NTR)
+						donorRomPath = bootstrapini.GetString("NDS-BOOTSTRAP", pathDefine, "");
+						donorRomFound = (donorRomPath != "" && access(donorRomPath.c_str(), F_OK) == 0);
+					}
+				}
+				if (!donorRomFound) {
+					consoleDemoInit();
+					iprintf("A donor ROM is required to\n");
+					iprintf("launch this title!\n");
+					iprintf("\n");
+					iprintf("Please create a forwarder for\n");
+					iprintf("an SDK");
+					if (requiresDonorRom == 51) {
+						iprintf("5");
+					} else {
+						iprintf("2.0");
+					}
+					iprintf(" title, launch it,\n");
+					iprintf("hold the Y button to open the\n");
+					iprintf("per-game settings, then select\n");
+					iprintf("\"Set as Donor ROM\"\n");
+					goto error;
+				}
+			}
 
 			// Write
 			bootstrapini.SetString("NDS-BOOTSTRAP", "NDS_PATH", ndsPath);

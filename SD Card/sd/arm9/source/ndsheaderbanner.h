@@ -126,7 +126,19 @@ typedef struct {
 	u32 debugRomDestination;	//!< debug RAM destination.
 	u32 offset_0x16C;			//reserved?
 
-	u8 zero[0x40];
+	u8 zero[0x10];
+	u32 mbk1;
+	u32 mbk2;
+	u32 mbk3;
+	u32 mbk4;
+	u32 mbk5;
+	u32 a9mbk6;
+	u32 a9mbk7;
+	u32 a9mbk8;
+	u32 a7mbk6;
+	u32 a7mbk7;
+	u32 a7mbk8;
+	u32 mbk9;
 	u32 region;
 	u32 accessControl;
 	u32 arm7SCFGSettings;
@@ -148,12 +160,17 @@ typedef struct {
 
 	// 0x200
 	// TODO: More DSi-specific fields.
-	u8 dsi1[0x30];
+	u32 dsi1[0x10/4];
+	u32 twlRomSize;
+	u32 dsi_unk3;
+	u32 dsi_unk4;
+	u32 dsi_unk5;
+	u8 dsi2[0x10];
 	u32 dsi_tid;
 	u32 dsi_tid2;
 	u32 pubSavSize;
 	u32 prvSavSize;
-	u8 dsi2[0x174];
+	u8 dsi3[0x174];
 } sNDSHeaderExt;
 
 
@@ -231,7 +248,7 @@ bool checkDsiBinaries(FILE* ndsFile);
  * @param filename NDS ROM filename.
  * @return 0 on success; non-zero on error.
  */
-//u32 getSDKVersion(FILE* ndsFile);
+u32 getSDKVersion(FILE* ndsFile);
 
 int checkIfHomebrew(FILE* ndsFile, const bool isRunFromSd);
 

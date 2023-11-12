@@ -4,44 +4,11 @@
 #include <unistd.h>
 
 #include "ndsheaderbanner.h"
+#include "module_params.h"
 
 static u32 arm9Sig[3][4];
 sNDSHeaderExt ndsHeader;
 sNDSHeaderExt ndsHeaderBinaryCheck;
-
-// Subroutine function signatures arm9
-u32 moduleParamsSignature[2]   = {0xDEC00621, 0x2106C0DE};
-
-//
-// Look in @data for @find and return the position of it.
-//
-/*u32 getOffset(u32* addr, size_t size, u32* find, size_t sizeofFind, int direction)
-{
-	u32* end = addr + size/sizeof(u32);
-
-    //u32 result = 0;
-	bool found = false;
-
-	do {
-		for(int i=0;i<(int)sizeofFind;i++) {
-			if (addr[i] != find[i]) 
-			{
-				break;
-			} else if(i==(int)sizeofFind-1) {
-				found = true;
-			}
-		}
-		if(!found) addr+=direction;
-	} while (addr != end && !found);
-
-	if (addr == end) {
-		return NULL;
-	}
-
-	return (u32)addr;
-}*/
-
-//char arm9binary[0x20000];
 
 bool checkDsiBinaries(FILE* ndsFile) {
 	u8 unitCode = 0;
@@ -104,22 +71,11 @@ bool checkDsiBinaries(FILE* ndsFile) {
  * @param filename NDS ROM filename.
  * @return 0 on success; non-zero on error.
  */
-/*u32 getSDKVersion(FILE* ndsFile) {
-	fseek(ndsFile, 0, SEEK_SET);
-	fread(&ndsHeader, 1, sizeof(ndsHeader), ndsFile);
-	
-	fseek(ndsFile, ndsHeader.arm9romOffset, SEEK_SET);
-	if(ndsHeader.arm9binarySize > 0x20000) ndsHeader.arm9binarySize = 0x20000;
-	fread(&arm9binary, 1, ndsHeader.arm9binarySize, ndsFile);
-
-	// Looking for moduleparams
-	uint32_t moduleparams = getOffset((u32*)arm9binary, ndsHeader.arm9binarySize, (u32*)moduleParamsSignature, 2, 1);
-	if(!moduleparams) {
+u32 getSDKVersion(FILE* ndsFile) {
+	if (ndsHeader.arm7destination >= 0x037F8000)
 		return 0;
-	}
-
-	return ((module_params_t*)(moduleparams - 0x1C))->sdk_version;
-}*/
+	return getModuleParams(&ndsHeader, ndsFile)->sdk_version;
+}
 
 int checkIfHomebrew(FILE* ndsFile, const bool isRunFromSd) {
 	fseek(ndsFile, 0, SEEK_SET);

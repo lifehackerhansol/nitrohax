@@ -1,5 +1,6 @@
 #include "perGameSettings.h"
 #include "cheat.h"
+#include "ndsheaderbanner.h"
 
 #include <array>
 #include <nds.h>
@@ -53,14 +54,70 @@ void GameSettings::save() {
 	ini.SaveIniFile(iniPath);
 }
 
-void GameSettings::menu() {
+bool GameSettings::isDonorRom(const u32 arm7size, const u32 a7mbk6, const u32 SDKVersion) {
+	if (a7mbk6 == 0x080037C0 || SDKVersion == 0) {
+		return false;
+	}
+
+	return ((SDKVersion > 0x2000000 && SDKVersion < 0x3000000
+		&& (arm7size == 0x2619C // SDK2.0
+		 || arm7size == 0x262A0
+		 || arm7size == 0x26A60
+		 || arm7size == 0x27218
+		 || arm7size == 0x27224
+		 || arm7size == 0x2724C
+		 || arm7size == 0x27280))
+	|| (!isDSiMode() && SDKVersion > 0x5000000	// SDK5 (NTR)
+	 && (arm7size==0x23708
+	  || arm7size==0x2378C
+	  || arm7size==0x237F0
+	  || arm7size==0x26370
+	  || arm7size==0x2642C
+	  || arm7size==0x26488
+	  || arm7size==0x26BEC
+	  || arm7size==0x27618
+	  || arm7size==0x2762C
+	  || arm7size==0x29CEC))
+	|| (!isDSiMode() && SDKVersion > 0x5000000	// SDK5 (TWL)
+	 && (arm7size==0x22B40
+	  || arm7size==0x22BCC
+	  || arm7size==0x28F84
+	  || arm7size==0x2909C
+	  || arm7size==0x2914C
+	  || arm7size==0x29164
+	  || arm7size==0x29EE8
+	  || arm7size==0x2A2EC
+	  || arm7size==0x2A318
+	  || arm7size==0x2AF18
+	  || arm7size==0x2B184
+	  || arm7size==0x2B24C
+	  || arm7size==0x2C5B4)));
+}
+
+void GameSettings::menu(FILE* f_nds_file, const std::string &fileName, const bool isHomebrew) {
 	consoleDemoInit();
+
+	extern sNDSHeaderExt ndsHeader;
+	const u32 arm7size = ndsHeader.arm7binarySize;
+
+	u32 SDKVersion = 0;
+	// u8 sdkSubVer = 0;
+	// char sdkSubVerChar[8] = {0};
+	if (memcmp(ndsHeader.gameCode, "HND", 3) == 0 || memcmp(ndsHeader.gameCode, "HNE", 3) == 0 || (ndsHeader.a7mbk6 != 0x080037C0 && !isHomebrew)) {
+		SDKVersion = getSDKVersion(f_nds_file);
+		// tonccpy(&sdkSubVer, (u8*)&SDKVersion+2, 1);
+		// sprintf(sdkSubVerChar, "%d", sdkSubVer);
+	}
 
 	u16 held;
 	int cursorPosition = 0;
 	int numOptions = consoleModel == 2 ? 9 : 8;
 	if (!isDSiMode()) {
 		numOptions = 3;
+	}
+	const bool showSetDonorRom = isDonorRom(arm7size, ndsHeader.a7mbk6, SDKVersion);
+	if (showSetDonorRom) {
+		numOptions++;
 	}
 	while(1) {
 		consoleClear();
@@ -78,6 +135,8 @@ void GameSettings::menu() {
 		iprintf("  Bootstrap File: %s\n", bootstrapLabels[bootstrapFile + 1]);
 		if(consoleModel == 2)
 			iprintf("  Widescreen: %s\n", widescreenLabels[widescreen + 1]);
+		if (showSetDonorRom)
+			iprintf("  Set as Donor ROM\n");
 		iprintf("\n<B> cancel, <START> save,\n<X> cheats\n");
 
 		// Print cursor
@@ -234,6 +293,61 @@ void GameSettings::menu() {
 		} else if(held & KEY_START) {
 			save();
 			return;
+		}
+
+		if(showSetDonorRom && (held & KEY_A) && cursorPosition == numOptions) {
+			consoleClear();
+
+			const char* pathDefine = "DONORTWL_NDS_PATH"; // SDK5.x (TWL)
+			if (arm7size == 0x29EE8) {
+				pathDefine = "DONORTWL0_NDS_PATH"; // SDK5.0 (TWL)
+			} else if (SDKVersion > 0x5000000
+					 && (arm7size==0x23708
+					  || arm7size==0x2378C
+					  || arm7size==0x237F0
+					  || arm7size==0x26370
+					  || arm7size==0x2642C
+					  || arm7size==0x26488
+					  || arm7size==0x27618
+					  || arm7size==0x2762C
+					  || arm7size==0x29CEC)) {
+				pathDefine = "DONOR5_NDS_PATH"; // SDK5.x (NTR)
+			} else if (SDKVersion > 0x5000000
+					 && (arm7size==0x26BEC)) {
+				pathDefine = "DONOR5_NDS_PATH_ALT"; // SDK5.x (NTR)
+			} else if (SDKVersion > 0x2000000 && SDKVersion < 0x3000000
+					&& (arm7size == 0x2619C
+					 || arm7size == 0x262A0
+					 || arm7size == 0x26A60
+					 || arm7size == 0x27218
+					 || arm7size == 0x27224
+					 || arm7size == 0x2724C
+					 || arm7size == 0x27280)) {
+				pathDefine = "DONOR20_NDS_PATH"; // SDK2.0
+			}
+
+			extern std::string romfolder;
+			extern void RemoveTrailingSlashes(std::string& path);
+
+			std::string romFolderNoSlash = romfolder;
+			RemoveTrailingSlashes(romFolderNoSlash);
+			const char *bootstrapIniPath = "/_nds/nds-bootstrap.ini";
+			CIniFile bootstrapini(bootstrapIniPath);
+			bootstrapini.SetString("NDS-BOOTSTRAP", pathDefine, romFolderNoSlash+"/"+fileName);
+			bootstrapini.SaveIniFile(bootstrapIniPath);
+
+			iprintf("Done!\n\n");
+			iprintf("<A> continue\n");
+
+			for (int i = 0; i < 25; i++) {
+				swiWaitForVBlank();
+			}
+			do {
+				scanKeys();
+				held = keysDownRepeat();
+
+				swiWaitForVBlank();
+			} while(!(held & KEY_A));
 		}
 	}
 }

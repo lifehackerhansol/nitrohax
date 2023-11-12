@@ -1,6 +1,7 @@
 #ifndef PER_GAME_SETTINGS_H
 #define PER_GAME_SETTINGS_H
 
+#include <nds/ndstypes.h>
 #include <string>
 
 #include "inifile.h"
@@ -25,7 +26,9 @@ public:
 
 	void save(void);
 
-	void menu(void);
+	bool isDonorRom(const u32 arm7size, const u32 a7mbk6, const u32 SDKVersion);
+
+	void menu(FILE* f_nds_file, const std::string &fileName, const bool isHomebrew);
 
 };
 
