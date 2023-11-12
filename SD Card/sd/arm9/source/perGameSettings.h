@@ -20,8 +20,6 @@ public:
 	int boostVram = -1;
 	int cardReadDMA = -1;
 	int asyncCardRead = -1;
-	int swiHaltHook = -1;
-	int expandRomSpace = -1;
 	int bootstrapFile = -1;
 	int widescreen = -1;
 
