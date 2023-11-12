@@ -659,7 +659,6 @@ int main(int argc, char **argv) {
 					consoleDemoInit();
 					iprintf ((orgsavesize == 0) ? "Creating save file...\n" : "Expanding save file...\n");
 					iprintf ("\n");
-					takeWhileMsg();
 
 					FILE *pFile = fopen(savepath.c_str(), orgsavesize > 0 ? "r+" : "wb");
 					if (pFile) {
@@ -791,7 +790,7 @@ int main(int argc, char **argv) {
 				bootstrapini.SetString("NDS-BOOTSTRAP", "SAV_PATH", savepath);
 			}
 			if (isHomebrew == 0) {
-				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", isDSiWare ? "" : setApFix(filename.c_str()));
+				bootstrapini.SetString("NDS-BOOTSTRAP", "AP_FIX_PATH", isDSiWare ? "" : setApFix(filename.c_str(), isRunFromSd));
 			}
 			bootstrapini.SetString("NDS-BOOTSTRAP", "HOMEBREW_ARG", "");
 			bootstrapini.SetInt("NDS-BOOTSTRAP", "BOOST_CPU", gameSettings.boostCpu);
